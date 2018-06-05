@@ -1,0 +1,15 @@
+<b class="heading"><span style="font-size:120%">2</span>&nbsp&nbsp&nbsp&nbsp&nbsp&nbspPhonetic</b><br>
+<table class="ipa">
+    <tbody>
+    <tr ng-repeat="cols2 in phonemeRows">
+        <td style="font-family:robotoRegular" ng-repeat = "col2 in cols2" id="{{col2.code}} {{col2.sound}} {{col2.gpc}}" ng-click="addSelected($event)">{{col2.sound}}</td>
+    </tr>
+    </tbody>
+</table>
+<br>
+<table>
+    <tr height="35px" align="center" style="font-family:dinMedium">
+        <td width="81px" class="activated" id="soundtoggle" ng-click="addSoundCodes()">Sound Code</td>
+        <td width="80px" class="notactive" id="ipatoggle" ng-click="addIPAs()">IPA</td>
+    </tr>
+</table>
