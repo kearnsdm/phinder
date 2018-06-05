@@ -39,6 +39,7 @@ body
 .spellings--phoneme
 {
     font-family: robotoLight;
+    font-weight: 700;
 }
 
 .results--phoneme
