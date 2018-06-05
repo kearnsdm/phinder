@@ -8,7 +8,7 @@
 <b class="heading"><span style="font-size:120%">3</span>&nbsp&nbsp&nbsp&nbsp&nbsp&nbspSound Spellings Selected</b><br>
 <label><a class="select1" href="javascript:;" style="text-decoration:none" ng-click="activate1()"><table style="border:none;font-family:robotoLight">
     <tr>
-        <td class="selected" ng-repeat-start="selectedLetter in selectedLetters" ng-click="removeSelected1($event)"><a href="javascript:;" id="{{selectedLetter}}" ng-click="removeSelected1($event)">{{selectedLetter.display}} <b class="glyphicon glyphicon-remove" ng-click="removeSelected1($event)" ng-show="this.selectedLetter.display != ' '"></b></a></td>
+        <td class="selected" ng-repeat-start="selectedLetter in selectedLetters" ng-click="removeSelected1($event)"><a href="javascript:;" id="{{selectedLetter}}" ng-click="removeSelected1($event)" class="spellings--phoneme">{{selectedLetter.display}} <b class="glyphicon glyphicon-remove" ng-click="removeSelected1($event)" ng-show="this.selectedLetter.display != ' '"></b></a></td>
         <td class="and" ng-if="($index+1) < selectedLetters.length" ng-repeat-end>AND</td>
     </tr>
     <tr>
@@ -21,7 +21,7 @@
     <a href="javascript:;" style="text-decoration:none" ng-click="activate2()"><table class="disable select2">
         <tr>
             <td style="width:30px;text-align:center">OR</td>
-            <td class="selected" ng-repeat-start="selectedLetter in selectedLetters2" ng-click="removeSelected2($event)"><a href="javascript:;" id="{{selectedLetter}}" ng-click="removeSelected2($event)">{{selectedLetter.display}} <b class="glyphicon glyphicon-remove" ng-click="removeSelected2($event)" ng-show="this.selectedLetter.display != ' '"></b></a></td>
+            <td class="selected" ng-repeat-start="selectedLetter in selectedLetters2" ng-click="removeSelected2($event)"><a href="javascript:;" id="{{selectedLetter}}" ng-click="removeSelected2($event)" class="spellings--phoneme">{{selectedLetter.display}} <b class="glyphicon glyphicon-remove" ng-click="removeSelected2($event)" ng-show="this.selectedLetter.display != ' '"></b></a></td>
             <td class="and" ng-if="($index+1) < selectedLetters2.length" ng-repeat-end>AND</td>
         </tr>
         <tr>
@@ -34,7 +34,7 @@
     <a href="javascript:;" style="position:relative;top:12px;text-decoration:none" ng-click="activate3()"><table class="disable select3" style="position:relative;top:5px">
         <tr>
             <td style="width:30px;text-align:center">OR</td>
-            <td class="selected" ng-repeat-start="selectedLetter in selectedLetters3" ng-click="removeSelected3($event)"><a href="javascript:;" id="{{selectedLetter}}" ng-click="removeSelected3($event)">{{selectedLetter.display}} <b class="glyphicon glyphicon-remove" ng-click="removeSelected3($event)" ng-show="this.selectedLetter.display != ' '"></b></a></td>
+            <td class="selected" ng-repeat-start="selectedLetter in selectedLetters3" ng-click="removeSelected3($event)"><a href="javascript:;" id="{{selectedLetter}}" ng-click="removeSelected3($event)" class="spellings--phoneme">{{selectedLetter.display}} <b class="glyphicon glyphicon-remove" ng-click="removeSelected3($event)" ng-show="this.selectedLetter.display != ' '"></b></a></td>
             <td class="and" ng-if="($index+1) < selectedLetters3.length" ng-repeat-end>AND</td>
         </tr>
         <tr>

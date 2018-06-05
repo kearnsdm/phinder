@@ -36,6 +36,16 @@ body
     src: url(../fonts/Roboto-Regular.ttf);
 }
 
+.spellings--phoneme
+{
+    font-family: robotoLight;
+}
+
+.results--phoneme
+{
+    font-family: robotoRegular;
+}
+
 a {
     color: #2bb673;
     text-decoration: none;
