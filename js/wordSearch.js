@@ -84,11 +84,9 @@ $(document).ready(function() {
 				if (split[2].length > 1) {
 					wordList.push({
 						word: split[0],
-						fullPhonic: split[1],
 						phonic: split[2],
-						phonNum: split[4],
-						sylNum: split[5],
-						freq: split[7],
+						sylNum: split[3],
+						freq: split[1],
 					});
 				}
 			});
@@ -292,7 +290,6 @@ function searchWordListAux(selected) {
 				wordMatch.push({
 					word: wordList[i].word,
 					phonic: wordList[i].phonic,
-					fullPhonic: wordList[i].fullPhonic,
 					freq: wordList[i].freq,
 				});
 			}
@@ -446,10 +443,7 @@ function searchWordListAdvAux(selected1, selected2, selected3) {
 			while (k < selected1.length && shouldBeAdded) {
 				if (onlyFlag) {
 					for (var j = 0; j < phonics.length; j++) {
-						if (
-							wordList[i].phonic.indexOf(phonics[j]) == -1 ||
-							wordList[j].phonNum > phonics.length
-						) {
+						if (wordList[i].phonic.indexOf(phonics[j]) == -1) {
 							shouldBeAdded = false;
 							return;
 						}
@@ -515,7 +509,6 @@ function searchWordListAdvAux(selected1, selected2, selected3) {
 				wordMatchAux.push({
 					word: wordList[i].word,
 					phonic: wordList[i].phonic,
-					fullPhonic: wordList[i].fullPhonic,
 					freq: wordList[i].freq,
 				});
 			}
@@ -536,7 +529,6 @@ function searchWordListAdvAux(selected1, selected2, selected3) {
 					wordMatchAux2.push({
 						word: value.word,
 						phonic: value.phonic,
-						fullPhonic: value.fullPhonic,
 						freq: value.freq,
 					});
 				}
@@ -561,7 +553,6 @@ function searchWordListAdvAux(selected1, selected2, selected3) {
 					wordMatch.push({
 						word: value.word,
 						phonic: value.phonic,
-						fullPhonic: value.fullPhonic,
 						freq: value.freq,
 					});
 				}
