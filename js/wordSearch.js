@@ -350,11 +350,11 @@ function searchWordListAux(selected) {
 				if (!ipaFlag) {
 					ipa.forEach(function(v) {
 						if (
-							val.substring(val.indexOf("[") + 1, val.indexOf("]")) == v.code &&
-							val.substring(val.indexOf("[") + 1, val.indexOf("]")) != ""
+							val.substring(val.indexOf("_") + 1, val.length - 1) == v.code &&
+							val.substring(val.indexOf("_") + 1, val.length - 1) != ""
 						) {
 							split[index] =
-								val.substring(0, val.indexOf("[")) +
+								val.substring(0, val.indexOf("_")) +
 								" = /" +
 								String.fromCharCode(parseInt(v.one, 16)) +
 								String.fromCharCode(parseInt(v.two, 16)) +
@@ -362,8 +362,8 @@ function searchWordListAux(selected) {
 								"/";
 						}
 
-						if (val.substring(val.indexOf("[") + 1, val.indexOf("]")) == "") {
-							split[index] = val.substring(0, val.indexOf("[")) + " = / /";
+						if (val.substring(val.indexOf("_") + 1, val.length - 1) == "") {
+							split[index] = val.substring(0, val.indexOf("_")) + " = / /";
 						}
 					});
 
@@ -371,11 +371,11 @@ function searchWordListAux(selected) {
 				} else {
 					soundCodes.forEach(function(v) {
 						if (
-							val.substring(val.indexOf("[") + 1, val.indexOf("]")) == v.code &&
-							val.substring(val.indexOf("[") + 1, val.indexOf("]")) != ""
+							val.substring(val.indexOf("_") + 1, val.length - 1) == v.code &&
+							val.substring(val.indexOf("_") + 1, val.length - 1) != ""
 						) {
 							split[index] =
-								val.substring(0, val.indexOf("[")) +
+								val.substring(0, val.indexOf("_")) +
 								" = /" +
 								String.fromCharCode(parseInt(v.one, 16)) +
 								String.fromCharCode(parseInt(v.two, 16)) +
@@ -385,8 +385,8 @@ function searchWordListAux(selected) {
 								"/";
 						}
 
-						if (val.substring(val.indexOf("[") + 1, val.indexOf("]")) == "") {
-							split[index] = val.substring(0, val.indexOf("[")) + " = / /";
+						if (val.substring(val.indexOf("_") + 1, val.length - 1) == "") {
+							split[index] = val.substring(0, val.indexOf("_")) + " = / /";
 						}
 					});
 
@@ -619,11 +619,11 @@ function searchWordListAdvAux(selected1, selected2, selected3) {
 				if (ipaFlag) {
 					ipa.forEach(function(v) {
 						if (
-							val.substring(val.indexOf("[") + 1, val.indexOf("]")) == v.code &&
-							val.substring(val.indexOf("[") + 1, val.indexOf("]")) != ""
+							val.substring(val.indexOf("_") + 1, val.length - 1) == v.code &&
+							val.substring(val.indexOf("_") + 1, val.length - 1) != ""
 						) {
 							split[index] =
-								val.substring(0, val.indexOf("[")) +
+								val.substring(0, val.indexOf("_")) +
 								" = /" +
 								String.fromCharCode(parseInt(v.one, 16)) +
 								String.fromCharCode(parseInt(v.two, 16)) +
@@ -631,8 +631,8 @@ function searchWordListAdvAux(selected1, selected2, selected3) {
 								"/";
 						}
 
-						if (val.substring(val.indexOf("[") + 1, val.indexOf("]")) == "") {
-							split[index] = val.substring(0, val.indexOf("[")) + " = / /";
+						if (val.substring(val.indexOf("_") + 1, val.length - 1) == "") {
+							split[index] = val.substring(0, val.indexOf("_")) + " = / /";
 						}
 					});
 
@@ -640,11 +640,11 @@ function searchWordListAdvAux(selected1, selected2, selected3) {
 				} else {
 					soundCodes.forEach(function(v) {
 						if (
-							val.substring(val.indexOf("[") + 1, val.indexOf("]")) == v.code &&
-							val.substring(val.indexOf("[") + 1, val.indexOf("]")) != ""
+							val.substring(val.indexOf("_") + 1, val.length - 1) == v.code &&
+							val.substring(val.indexOf("_") + 1, val.length - 1) != ""
 						) {
 							split[index] =
-								val.substring(0, val.indexOf("[")) +
+								val.substring(0, val.indexOf("_")) +
 								" = /" +
 								String.fromCharCode(parseInt(v.one, 16)) +
 								String.fromCharCode(parseInt(v.two, 16)) +
@@ -654,8 +654,8 @@ function searchWordListAdvAux(selected1, selected2, selected3) {
 								"/";
 						}
 
-						if (val.substring(val.indexOf("[") + 1, val.indexOf("]")) == "") {
-							split[index] = val.substring(0, val.indexOf("[")) + " = / /";
+						if (val.substring(val.indexOf("_") + 1, val.length - 1) == "") {
+							split[index] = val.substring(0, val.indexOf("_")) + " = / /";
 						}
 					});
 

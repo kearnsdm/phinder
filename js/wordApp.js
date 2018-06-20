@@ -76,9 +76,9 @@ app.controller("phonicCtrl", function($scope) {
 			function(data) {
 				txtlines1 = data.split("\n");
 				txtlines1.forEach(function(value) {
-					soundLetters.push(value.substring(0, value.indexOf("[")));
+					soundLetters.push(value.substring(0, value.indexOf("_")));
 					allSounds.push(
-						value.substring(value.indexOf("[") + 1, value.indexOf("]"))
+						value.substring(value.indexOf("_") + 1, value.length - 1)
 					);
 				});
 
@@ -493,7 +493,7 @@ app.controller("phonicCtrl", function($scope) {
 			if (clickEvent.target.innerHTML == soundLetters[index]) {
 				matchingLetters.push({
 					code: clickEvent.target.innerHTML,
-					gpc: value.substring(value.indexOf("[") + 1, value.indexOf("]")),
+					gpc: value.substring(value.indexOf("_") + 1, value.length - 1),
 				});
 			}
 		});
@@ -509,7 +509,7 @@ app.controller("phonicCtrl", function($scope) {
 							String.fromCharCode(parseInt(v.two, 16)) +
 							String.fromCharCode(parseInt(v.three, 16)) +
 							"/",
-						gpc: value.code + "[" + value.gpc + "]",
+						gpc: value.code + "_" + value.gpc + "_",
 					};
 				}
 
@@ -517,7 +517,7 @@ app.controller("phonicCtrl", function($scope) {
 					ipaMatch[index] = {
 						code: value.code,
 						sound: "/ /",
-						gpc: value.code + "[" + value.gpc + "]",
+						gpc: value.code + "_" + value.gpc + "_",
 					};
 				}
 			});
@@ -534,7 +534,7 @@ app.controller("phonicCtrl", function($scope) {
 							String.fromCharCode(parseInt(v.four, 16)) +
 							String.fromCharCode(parseInt(v.five, 16)) +
 							"/",
-						gpc: value.code + "[" + value.gpc + "]",
+						gpc: value.code + "_" + value.gpc + "_",
 					};
 				}
 
@@ -542,7 +542,7 @@ app.controller("phonicCtrl", function($scope) {
 					soundMatch[index] = {
 						code: value.code,
 						sound: "/ /",
-						gpc: value.code + "[" + value.gpc + "]",
+						gpc: value.code + "_" + value.gpc + "_",
 					};
 				}
 			});
