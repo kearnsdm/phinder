@@ -333,6 +333,7 @@ function searchWordListAux(selected) {
 
 	// set up processed word list to display
 	//wordMatch.forEach(function(value) {
+	let unprocessedPhonemes = {};
 	for (var i = 0; i < wordMatch.length; i++) {
 		if (
 			wordMatch[i].word == "Select one or more phonemes" ||
@@ -344,6 +345,10 @@ function searchWordListAux(selected) {
 			var phonics = "";
 
 			split.forEach(function(val, index) {
+				if (val === "") {
+					return;
+				}
+				let foundPhonic = false;
 				if (!ipaFlag) {
 					ipa.forEach(function(v) {
 						if (
@@ -357,6 +362,7 @@ function searchWordListAux(selected) {
 								String.fromCharCode(parseInt(v.two, 16)) +
 								String.fromCharCode(parseInt(v.three, 16)) +
 								"/";
+							foundPhonic = true;
 						}
 
 						if (val.substring(val.indexOf("_") + 1, val.length - 1) == "") {
@@ -380,6 +386,7 @@ function searchWordListAux(selected) {
 								String.fromCharCode(parseInt(v.four, 16)) +
 								String.fromCharCode(parseInt(v.five, 16)) +
 								"/";
+							foundPhonic = true;
 						}
 
 						if (val.substring(val.indexOf("_") + 1, val.length - 1) == "") {
@@ -389,11 +396,22 @@ function searchWordListAux(selected) {
 
 					phonics += " " + split[index] + " ";
 				}
+				/*
+				if (!foundPhonic && (!val || val.length <= 2)) {
+					//console.log(`Did not process ${val} for ${wordMatch[i].word}.`);
+					if (unprocessedPhonemes[val]) {
+						unprocessedPhonemes[val].push(index + ": " + wordMatch[i].word);
+					} else {
+						unprocessedPhonemes[val] = [index + ": " + wordMatch[i].word];
+					}
+				}
+				*/
 			});
 
 			wordMatch[i].phonic = phonics;
 		}
 	}
+	// console.log(unprocessedPhonemes);
 
 	// sort list by frequency
 	if (freqDes) {
