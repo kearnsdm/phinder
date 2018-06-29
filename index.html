@@ -19,13 +19,22 @@
     <script src="js/wordSearch.js"></script>
     <script src="js/wordApp.js"></script>
 <script>
-  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+(function(i, s, o, g, r, a, m) {
+	i["GoogleAnalyticsObject"] = r;
+	(i[r] =
+		i[r] ||
+		function() {
+			(i[r].q = i[r].q || []).push(arguments);
+		}),
+		(i[r].l = 1 * new Date());
+	(a = s.createElement(o)), (m = s.getElementsByTagName(o)[0]);
+	a.async = 1;
+	a.src = g;
+	m.parentNode.insertBefore(a, m);
+})(window, document, "script", "//www.google-analytics.com/analytics.js", "ga");
 
-  ga('create', 'UA-49825662-1', 'devinkearns.org');
-  ga('send', 'pageview');
+ga("create", "UA-49825662-1", "devinkearns.org");
+ga("send", "pageview");
 </script>
 </head>
 <body style="height:100%">
@@ -192,10 +201,6 @@
                 <div class="form-group"><input name="input2" id="maxFreq" class="form-control inputClass" style="width:98px"></div>
             </form>
             <div id="slider"></div>
-            <label>
-                <input id="badWord" type="checkbox" value="" ng-model="filter">
-                <b>Bad Word Filter</b>
-            </label><br>
             <label>
                 <input type="checkbox" value="" id="only">
                 <b title="Only search for words with the selected sound spellings" class="only" data-placement="bottom">Only</b>

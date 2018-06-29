@@ -13,64 +13,6 @@ var ipa = [];
 var numLimitSyl = 4;
 var numLimitLet = 10;
 var frequency = [0, 25000000];
-var badWords = [
-	"anal",
-	"anus",
-	"ass",
-	"asshole",
-	"assholes",
-	"bastard",
-	"bastards",
-	"bitch",
-	"bitches",
-	"boner",
-	"boners",
-	"boob",
-	"boobs",
-	"breast",
-	"breasts",
-	"bullshit",
-	"chink",
-	"clitoris",
-	"cocaine",
-	"cock",
-	"cocks",
-	"cunt",
-	"dick",
-	"dicks",
-	"dike",
-	"dildo",
-	"douche",
-	"drunk",
-	"drunks",
-	"dyke",
-	"erection",
-	"erections",
-	"faggot",
-	"faggots",
-	"fag",
-	"fags",
-	"fuck",
-	"genitalia",
-	"heroin",
-	"jackass",
-	"marijuana",
-	"nigger",
-	"penis",
-	"piss",
-	"pussy",
-	"scrotum",
-	"semen",
-	"shit",
-	"testicle",
-	"testicles",
-	"tit",
-	"tits",
-	"vagina",
-	"whore",
-	"whore",
-];
-var badFilter = false;
 var onlyFlag = false;
 
 $(document).ready(function() {
@@ -134,12 +76,6 @@ function applyChanges() {
 	);
 	frequency = $("#slider").val();
 
-	if ($("#badWord")[0].checked) {
-		badFilter = true;
-	} else {
-		badFilter = false;
-	}
-
 	if ($("#only")[0].checked) {
 		onlyFlag = true;
 	} else {
@@ -179,12 +115,6 @@ function cancelChanges() {
 		$("#letgroup .let[value=" + numLimitLet + "]").addClass("active");
 
 		$("#slider")[0].vSet(frequency);
-
-		if (badFilter) {
-			$("#badWord")[0].checked = true;
-		} else {
-			$("#badWord")[0].checked = false;
-		}
 
 		if (onlyFlag) {
 			$("#only")[0].checked = true;
@@ -235,12 +165,6 @@ function searchWordListAux(selected) {
 
 			shouldBeAdded = true;
 			while (k < selected.length && shouldBeAdded) {
-				// don't add if word is in the bad word list
-				if (badFilter && binaryIndexOf.call(badWords, wordList[i].word) != -1) {
-					shouldBeAdded = false;
-					break;
-				}
-
 				phonics.forEach(function(val) {
 					// don't add words over syllable limit
 					if (numLimitSyl != 0) {
@@ -511,12 +435,6 @@ function searchWordListAdvAux(selected1, selected2, selected3) {
 					wordList[i].freq > parseInt(frequency[1])
 				) {
 					shouldBeAdded = false;
-				}
-
-				if (badFilter) {
-					if (binaryIndexOf.call(badWords, wordList[i].word) != -1) {
-						shouldBeAdded = false;
-					}
 				}
 
 				k++;
