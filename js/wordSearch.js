@@ -24,6 +24,7 @@ $(document).ready(function() {
 			txtlines3.forEach(function(value) {
 				var split = value.split("\t");
 				if (split[2].length > 1) {
+					split[1] = Math.round(split[1]) || "";
 					wordList.push({
 						word: split[0],
 						phonic: split[2],
