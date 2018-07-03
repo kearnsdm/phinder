@@ -12,7 +12,7 @@ var soundCodes = [];
 var ipa = [];
 var numLimitSyl = 4;
 var numLimitLet = 10;
-var frequency = [0, 25000000];
+var frequency = [0, 75000];
 var onlyFlag = false;
 
 $(document).ready(function() {
@@ -647,16 +647,15 @@ function binaryIndexOf(searchElement) {
 
 function initializeFreqSlider() {
 	$("#slider").noUiSlider({
-		start: [0, 25000000],
+		start: [0, 75000],
 		behaviour: "drag-tap",
 		connect: true,
 		range: {
 			min: [0],
-			"10%": [5000, 1000],
-			"25%": [50000, 10000],
-			"50%": [500000, 100000],
-			"75%": [5000000, 1000000],
-			max: [25000000],
+			"25%": [100, 10],
+			"50%": [1000, 100],
+			"75%": [10000, 1000],
+			max: [75000],
 		},
 
 		serialization: {
