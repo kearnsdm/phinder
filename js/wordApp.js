@@ -1,6 +1,3 @@
-/*
- * Created by Miao on 3/18/14.
- */
 var doc = document;
 var txtlines1 = [];
 var txtlines2 = [];

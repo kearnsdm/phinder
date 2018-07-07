@@ -1,6 +1,3 @@
-/*
- * Created by Miao on 3/29/14.
- */
 var txtlines3 = [];
 var wordList = [];
 var phonics = [];
