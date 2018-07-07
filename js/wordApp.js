@@ -144,7 +144,7 @@ app.controller("phonicCtrl", function($scope) {
 		"ea",
 		"ee",
 		"igh",
-		"i_e",
+		"i-e",
 		"k",
 		"m",
 		"oa",
