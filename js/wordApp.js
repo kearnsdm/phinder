@@ -65,6 +65,9 @@ var app = angular
 	});
 
 // set up controller
+app.controller("footer", function($scope) {
+	$scope.copyright = new Date();
+});
 app.controller("phonicCtrl", function($scope) {
 	$(document).ready(function() {
 		// load SoundList.txt and create the list for all sound patterns when document is ready
