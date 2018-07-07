@@ -80,6 +80,11 @@ function applyChanges() {
 		onlyFlag = false;
 	}
 
+	angular
+		.element("#search")
+		.scope()
+		.searchWords();
+
 	setTimeout(function() {
 		$("#alert").html(
 			'<div id="alert"><div id="fade" class="alert alert-success alert-dismissable fade in" style="font-size:small"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>Changes applied!</div></div>'
