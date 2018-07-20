@@ -272,7 +272,7 @@ function searchWordListAux(selected) {
 			var phonics = "";
 
 			split.forEach(function(val, index) {
-				if (val === "") {
+				if (val === "" || val === "'") {
 					return;
 				}
 				let foundPhonic = false;
