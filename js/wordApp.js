@@ -1159,6 +1159,34 @@ app.controller("phonicCtrl", function($scope) {
 			}
 		}
 	};
+
+	$scope.openHelp = function() {
+		$.fancybox.open(
+			[
+				{
+					src: "images/1.jpg",
+				},
+				{
+					src: "images/2.jpg",
+				},
+				{
+					src: "images/3.jpg",
+				},
+				{
+					src: "images/4.jpg",
+				},
+				{
+					src: "images/5.jpg",
+				},
+				{
+					src: "images/6.jpg",
+				},
+			],
+			{
+				loop: false,
+			}
+		);
+	};
 });
 
 // comparator to sort word list in alphabetical descending order
