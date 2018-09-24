@@ -1,5 +1,15 @@
-<b class="heading"><span style="font-size:120%">1</span>&nbsp&nbsp&nbsp&nbsp&nbsp&nbspGraphemes</b> &nbsp;<a href="#" class="help" title="Help" style="text-decoration:none" ng-click="openHelp()"><span class="glyphicon glyphicon-question-sign help-icon" ></span></a><br>
-<table class="patterns" style="font-family:robotoRegular">
+<!-- old format followed by new format -->
+<!-- <b class="heading"><span style="font-size:120%">1</span>&nbsp&nbsp&nbsp&nbsp&nbsp&nbspGraphemes</b> &nbsp;<a href="#" class="help" title="Help" style="text-decoration:none" ng-click="openHelp()"><span class="glyphicon glyphicon-question-sign help-icon" ></span></a><br> -->
+
+<div class="heading">
+  <span style="font-size: 120%">1</span>&nbsp&nbsp&nbsp&nbsp&nbsp&nbspGraphemes &nbsp; <!-- left in this style until can rework this div -->
+    <a href="#" class="help" title="Help" style="text-decoration:none" ng-click="openHelp()">
+        <span class="glyphicon glyphicon-question-sign help-icon" ></span>
+    </a>
+</div>
+<br>
+
+<!-- <table class="patterns" style="font-family:robotoRegular">
     <tbody>
     <tr ng-hide="searchPatterns" ng-repeat="cols in defPatternRows | limitTo:4">
         <td style="font-family:robotoRegular" ng-repeat = "col in cols | limitTo:4" ng-click="choosePattern($event)">{{col}}</td>
@@ -8,8 +18,24 @@
         <td style="font-family:robotoRegular" ng-repeat = "col in cols | filter:searchPatterns | limitTo:4" ng-click="choosePattern($event)">{{col}}</td>
     </tr>
     </tbody>
-</table><br>
-<div class="right-inner-addon">
+</table><br> -->
+
+<table class="patterns">
+  <tbody>
+    <tr ng-hide="searchPatterns" ng-repeat="cols in defPatternRows | limitTo:4">
+      <td ng-repeat = "col in cols | limitTo:4" ng-click="choosePattern($event)">{{col}}</td>
+    </tr>
+    <tr ng-hide="!searchPatterns" ng-repeat="cols in patternRows | limitTo:4">
+      <td ng-repeat = "col in cols | filter:searchPatterns | limitTo:4" ng-click="choosePattern($event)">{{col}}</td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<!-- <div class="right-inner-addon">
     <i class="glyphicon glyphicon-search" style="color:#238d57"></i>
     <input class="inputform" style="font-family:dinLight" type="text" ng-change="resetPhonemes()" ng-model="searchPatterns" placeholder="Search Letter Pattern" />
+</div> -->
+<div class="right-inner-addon">
+  <i class="glyphicon glyphicon-search"></i>
+  <input class="inputform" type="text" ng-change="resetPhonemes()" ng-model="searchPatterns" placeholder="Search Letter Pattern" />
 </div>

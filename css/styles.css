@@ -4,9 +4,32 @@ body
     margin:0;
     padding:0;
     font-family:din;
-    color: #2bb673;
+    color: #116063; /* this is the color */
+    color: #0d4b4d; /* on lt gray #dbd7d7*/
+    color: #0A3637; /* on dk gray #cbc7c7 */
+    color: #631411; /* possible complementary color */
+    /* TO DO
+    create color variables
+    anchor - 116063
+    anchor hover - 1a9195,
+    dropdown menu anchor - 1a9195,
+    disabled anchor - d5d6d4,
+    border color - dfdada,
+    table.patterns - 116063,
+    table cell hover - dbd7d7,
+    table cell active - cbc7c7,
+    table cell active border - e4dfdf,
+    table.ipa - 116063,
+    table.ipa border - dcd7d7,
+    table.ipa hover - dbd7d7,
+    table.ipa active - cbc7c7,
+
+    */
 }
 
+/* TO DO
+source fonts from google
+*/
 @font-face {
     font-family:din;
     src: url(../fonts/DINNextLTPro-Regular.otf);
@@ -37,6 +60,11 @@ body
     src: url(../fonts/Roboto-Regular.ttf);
 }
 
+.heading {
+    font-size: 120%;
+    font-weight: bold;
+}
+
 .spellings--phoneme
 {
     font-family: robotoLight;
@@ -49,7 +77,7 @@ body
 }
 
 a {
-    color: #2bb673;
+    color: #116063;
     text-decoration: none;
     font-family:dinLight;
     -webkit-touch-callout: none;
@@ -62,7 +90,7 @@ a {
 
 a:hover
 {
-    color: #28a363;
+    color: #1a9195;
     text-decoration:none;
     cursor:pointer;
 }
@@ -75,7 +103,7 @@ a:focus
 }
 
 .dropdown-menu a{
-    color: #28a363 !important;
+    color: #1a9195 !important;
 }
 
 #list
@@ -87,7 +115,21 @@ a:focus
 
 .disabled a
 {
-    color: rgb(213, 214, 212) !important;
+    color: #d5d6d4 !important;
+}
+
+table tr {
+    height: 35px;
+    align: center;
+    font-family: dinMedium;
+}
+
+table td.notactive {
+    width: 80px;
+}
+
+table td.activated {
+    width: 81px;
 }
 
 table.patterns td, table.patterns th
@@ -109,7 +151,8 @@ table.patterns td
 table.patterns
 {
     font-weight:bold;
-    color:#2bb673;
+    font-family:robotoRegular;
+    color:#116063;
     background: #f8f3f3;
     -moz-border-radius:6px;
     -webkit-touch-callout: none;
@@ -161,7 +204,7 @@ table.ipa td
 table.ipa
 {
     font-weight:bold;
-    color:#2bb673;
+    color:#116063;
     background: #f6f1f1;
     border-color: #dcd7d7;
     -moz-border-radius:6px;
@@ -341,8 +384,8 @@ table.ipa tr:first-child
 .caret.caret-reversed
 {
     border-top-width: 0;
-    border-bottom: 4px solid #28a363;
-    color: #28a363;
+    border-bottom: 4px solid #1a9195;
+    color: #1a9195;
 }
 
 .inputform
@@ -354,25 +397,27 @@ table.ipa tr:first-child
     padding-left:6px;
     padding-top:2px;
     font-size:95%;
+    font-family:dinLight
 }
 
 ::-webkit-input-placeholder { /* WebKit browsers */
-    color: #299e60;
+    color: #116063;
 }
 :-moz-placeholder { /* Mozilla Firefox 4 to 18 */
-    color:    #299e60;
+    color:    #116063;
     opacity:  1;
 }
 ::-moz-placeholder { /* Mozilla Firefox 19+ */
-    color:    #299e60;
+    color:    #116063;
     opacity:  1;
 }
 :-ms-input-placeholder { /* Internet Explorer 10+ */
-    color:    #299e60;
+    color:    #116063;
 }
 
 .right-inner-addon {
     position: relative;
+    color:#116063;
 }
 .right-inner-addon input {
     padding-right: 30px;
@@ -382,13 +427,12 @@ table.ipa tr:first-child
     right: -6px;
     padding: 3px 12px;
     pointer-events: none;
-    color:#4cae4c;
 }
 
 #search
 {
-    background:#2bb673;
-    color:white;
+    background: #116063;
+    color: white;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     -khtml-user-select: none;
@@ -399,35 +443,35 @@ table.ipa tr:first-child
 
 #search:hover
 {
-    background: #28a363;
+    background: #1a9195;
     cursor:pointer;
 }
 
 #search:active
 {
-    background: #229560;
+    background: #0A3637;
 }
 
 .activated
 {
-    background-color:#299e60;
+    background-color:#116063;
     color:white;
 }
 
 .activated:hover
 {
-    background-color: #007f4a;
+    background-color: #0d4b4d;
     cursor:pointer;
 }
 
 .active:active
 {
-    background-color: #005635;
+    background-color: #0A3637;
 }
 
 .notactive
 {
-    color: #299e60;
+    color: #116063;
     background: #f6f1f1;
     border-color:#dbd7d7;
 }
@@ -485,17 +529,17 @@ table.ipa tr:first-child
 
 .optionstoggle
 {
-    color: #2c9c58;
+    color: #116063;
 }
 
 .optionstoggle:hover
 {
-    color: #1d7447;
+    color: #0d4b4d;
 }
 
 .options
 {
-    color: #2c9c58;
+    color: #116063;
 }
 
 .options-hide
@@ -539,7 +583,7 @@ table.ipa tr:first-child
 {
     height: 30px;
     width: 60px;
-    background: #2bb673;
+    background: #116063;
     color: white;
     align: center;
     text-align: center;
@@ -547,7 +591,7 @@ table.ipa tr:first-child
 
 .apply:hover
 {
-    background: #28a363;
+    background: #1a9195;
 }
 
 .cancel
