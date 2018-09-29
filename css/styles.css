@@ -123,7 +123,7 @@ a:focus
 
 table tr {
     height: 35px;
-    align: center;
+    text-align: center;
     font-family: dinMedium;
 }
 
