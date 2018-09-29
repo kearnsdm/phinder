@@ -1,0 +1,16 @@
+{
+  "short_name": "Phinder",
+  "name": "Phinder Letter Selector & Word List App",
+  "icons": [
+    {
+      "src": "/images/logo.jpg",
+      "type": "image/jpg",
+      "sizes": "192x912"
+    }
+  ],
+  "start_url": "/index.html",
+  "background_color": "#eee",
+  "display": "standalone",
+  "scope": "/",
+  "theme_color": "#116063"
+}
