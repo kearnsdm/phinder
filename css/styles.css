@@ -79,6 +79,12 @@ source fonts from google
     font-family: robotoRegular;
 }
 
+.advanced {
+    position:relative;
+    left:-29px;
+    top:5px"
+}
+
 a {
     color: #116063;
     text-decoration: none;
@@ -239,6 +245,14 @@ table.ipa td:first-child
 table.ipa tr:first-child
 {
     border-top: none;
+}
+
+.soundHistory {
+    position:absolute;
+    /*left:-100px;*/
+    text-align:center;
+    font-family:robotoLight;
+    color:#238d57;
 }
 
 .selected
