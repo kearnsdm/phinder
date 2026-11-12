@@ -13,6 +13,13 @@ function compileCriterion(ds: Dataset, c: Criterion, morph: Morph | null): Test 
     if (s === '') return () => false;
     if (c.position === 'start') return (_i, seq) => seq.startsWith(s);
     if (c.position === 'end') return (_i, seq) => seq.endsWith(s);
+    if (c.position === 'middle') {
+      // The first match after the start of the word must stop before its end.
+      return (_i, seq) => {
+        const at = seq.indexOf(s, 1);
+        return at !== -1 && at + s.length < seq.length;
+      };
+    }
     return (_i, seq) => seq.includes(s);
   }
   if (!morph) return () => false;
@@ -127,7 +134,10 @@ export function matchedPositions(ds: Dataset, seq: string, criteria: Criterion[]
     } else if (c.position === 'end') {
       if (seq.endsWith(s)) mark(seq.length - s.length);
     } else {
-      for (let at = seq.indexOf(s); at !== -1; at = seq.indexOf(s, at + 1)) mark(at);
+      const middle = c.position === 'middle';
+      for (let at = seq.indexOf(s); at !== -1; at = seq.indexOf(s, at + 1)) {
+        if (!middle || (at > 0 && at + s.length < seq.length)) mark(at);
+      }
     }
   }
   return hit;

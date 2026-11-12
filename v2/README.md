@@ -12,7 +12,7 @@ version (in the repository root) and adds new ways to search.
 | Start with a sound | "Start with: Sound" picks a phoneme first, then one of its spellings. |
 | Word parts | "Start with: Word part" searches for prefixes and suffixes. They are found by rule (see `src/lib/morph.ts`), so results need checking. |
 | Join (+) | Joined sound spellings form one unit. A split digraph is written around the next grapheme (`a-e` + `k` = `ake`). Units are labelled "rime" or "body" when they have that shape. |
-| Position | Click a selected sound spelling to require it at the start or the end of the word. |
+| Position | Click a selected sound spelling to require it at the start, in the middle, or at the end of the word. |
 | Advanced | One OR row (at least one of these) and one NOT row (none of these). |
 | Decodable words only | A KNOWN row holds the sound spellings students know. The list shows only words made entirely from them. |
 | Options | Limits apply at once. The limits in force are shown above the list. A word-set switch keeps only words that have a frequency value. |

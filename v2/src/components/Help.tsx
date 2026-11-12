@@ -39,7 +39,7 @@ export function Help({ onClose }: { onClose: () => void }) {
             <b>Join sound spellings.</b> Click &ldquo;+&rdquo; under AND to join two neighbours into one unit that must appear together, such as a-e + k = ake.
           </li>
           <li>
-            <b>Start or end of the word.</b> Click a selected sound spelling to say where it must be. A rime such as &ldquo;ake&rdquo; at the end of the word gives a word family.
+            <b>Start, middle or end of the word.</b> Click a selected sound spelling to say where it must be. A rime such as &ldquo;ake&rdquo; at the end of the word gives a word family.
           </li>
           <li>
             <b>Advanced.</b> Adds an OR row (at least one of these) and a NOT row (none of these). Click a row to add to it.

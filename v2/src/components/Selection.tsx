@@ -38,6 +38,7 @@ const ROW_HINT: Record<Row, string> = {
 const POSITIONS: [Position, string][] = [
   ['any', 'Anywhere in the word'],
   ['start', 'Start of the word'],
+  ['middle', 'Middle of the word'],
   ['end', 'End of the word'],
 ];
 

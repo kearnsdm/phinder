@@ -13,7 +13,7 @@ import { fixtureDataset, fixturePacked, ids } from './fixture';
 
 const ds = fixtureDataset();
 const morph = new Morph(ds);
-const unit = (keys: string[], position: 'any' | 'start' | 'end' = 'any'): Criterion => ({
+const unit = (keys: string[], position: 'any' | 'start' | 'middle' | 'end' = 'any'): Criterion => ({
   type: 'unit',
   gpcs: ids(ds, ...keys),
   position,
@@ -84,6 +84,10 @@ describe('search', () => {
     expect(words({ all: [unit(['a-e_e', 'k_k'], 'end')] })).toEqual(['bake', 'cake', 'lake', 'make']);
     expect(words({ all: [unit(['c_k', 'a_a'], 'start')] })).toEqual(['cat', 'cats']);
     expect(words({ all: [unit(['t_t'], 'start')] })).toEqual(['tap', 'tin']);
+    // Middle: not the first and not the last sound spelling.
+    expect(words({ all: [unit(['t_t'], 'middle')] })).toEqual(['aesthetic', 'cats']);
+    expect(words({ all: [unit(['a-e_e', 'k_k'], 'middle')] })).toEqual(['baked']);
+    expect(words({ all: [unit(['n_n'], 'middle')] })).toEqual(['corner', 'happiness', 'running', 'signal', 'under', 'unhappy', 'unit']);
   });
 
   it('supports "at least one of" and "none of"', () => {
@@ -137,6 +141,8 @@ describe('search', () => {
     const seq = ds.seq[ds.wordIndex.get('baked')!];
     expect([...matchedPositions(ds, seq, [unit(['a-e_e', 'k_k'])])]).toEqual([1, 2]);
     expect([...matchedPositions(ds, seq, [unit(['a-e_e', 'k_k'], 'end')])]).toEqual([]);
+    expect([...matchedPositions(ds, seq, [unit(['k_k'], 'middle')])]).toEqual([2]);
+    expect([...matchedPositions(ds, seq, [unit(['b_b'], 'middle')])]).toEqual([]);
   });
 });
 
@@ -235,7 +241,7 @@ describe('share links', () => {
     const state = defaultState();
     state.query = {
       all: [unit(['a-e_e', 'k_k'], 'end'), { type: 'affix', affix: 'suf-ed', keepsSound: false }],
-      any: [unit(["n'_@n"]), unit(['g_#'], 'start')],
+      any: [unit(["n'_@n"], 'middle'), unit(['g_#'], 'start')],
       none: [unit(['sh_S'])],
       decodable: true,
       taught: ids(ds, 'm_m', 'a_a'),

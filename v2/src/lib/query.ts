@@ -2,7 +2,8 @@
 
 import type { WordSet } from './stats';
 
-export type Position = 'any' | 'start' | 'end';
+/** 'middle' = not the first and not the last sound spelling of the word. */
+export type Position = 'any' | 'start' | 'middle' | 'end';
 
 /** One sound spelling, or several that must be next to each other in this order. */
 export interface UnitCriterion {

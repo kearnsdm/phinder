@@ -78,7 +78,7 @@ export function setKeepsSound(q: Query, row: GroupName, index: number, keepsSoun
 
 // ---- labels ----------------------------------------------------------------
 
-const POSITION_TEXT: Record<Position, string> = { any: '', start: 'at the start', end: 'at the end' };
+const POSITION_TEXT: Record<Position, string> = { any: '', start: 'at the start', middle: 'in the middle', end: 'at the end' };
 
 export function criterionLabel(ds: Dataset, c: Criterion, notation: Notation): string {
   if (c.type === 'affix') return affixById.get(c.affix)?.label ?? c.affix;
@@ -98,6 +98,7 @@ export function criterionTags(ds: Dataset, c: Criterion): string[] {
   const shape = unitShape(c.gpcs.map((id) => ds.gpcs[id]));
   if (shape === 'rime' || shape === 'body') tags.push(shape);
   if (c.position === 'start') tags.push('start of word');
+  if (c.position === 'middle') tags.push('middle of word');
   if (c.position === 'end') tags.push('end of word');
   return tags;
 }

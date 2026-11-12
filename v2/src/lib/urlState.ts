@@ -2,6 +2,7 @@
 // "#", so a link reopens the same search. Sound spellings are stored by name
 // ("ea_i"), not by number, so links keep working when the word data changes.
 //
+// Position flags: :s start, :m middle, :e end.
 // Example: #all=ea_i,a-e_e+k_k:e&dec=1&taught=m_m,a_a&syl=1-2&sort=alpha-asc
 
 import type { Dataset } from './dataset';
@@ -41,7 +42,8 @@ const enc = encodeURIComponent;
 function encodeCriterion(ds: Dataset, c: Criterion): string {
   if (c.type === 'affix') return `*${enc(c.affix)}${c.keepsSound ? '' : ':x'}`;
   const keys = c.gpcs.map((id) => enc(ds.gpcs[id].key)).join('+');
-  return c.position === 'start' ? `${keys}:s` : c.position === 'end' ? `${keys}:e` : keys;
+  const flag = { any: '', start: ':s', middle: ':m', end: ':e' }[c.position];
+  return keys + flag;
 }
 
 function decodeCriterion(ds: Dataset, text: string): Criterion | null {
@@ -57,7 +59,8 @@ function decodeCriterion(ds: Dataset, text: string): Criterion | null {
     gpcs.push(g.id);
   }
   if (gpcs.length === 0) return null;
-  return { type: 'unit', gpcs, position: flag === 's' ? 'start' : flag === 'e' ? 'end' : 'any' };
+  const position = flag === 's' ? 'start' : flag === 'm' ? 'middle' : flag === 'e' ? 'end' : 'any';
+  return { type: 'unit', gpcs, position };
 }
 
 /** "1-4", "-10" (no minimum), "-" (no limit); null when the range is the default. */
