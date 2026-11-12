@@ -1,0 +1,6 @@
+node_modules/
+dist/
+# Word data is never committed (see README.md, "Data").
+data/raw/
+public/data/
+*.zip

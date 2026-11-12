@@ -1,0 +1,6 @@
+{
+  "comment": "Shared by scripts/build-data.mjs and src/lib/dataset.ts. Changing the key requires rebuilding the data file.",
+  "file": "data/phinder.dat",
+  "key": "phinder-is-phabulous",
+  "gpcCharBase": 256
+}
