@@ -273,9 +273,20 @@ describe('share links', () => {
     state.sort = 'alpha-asc';
     state.notation = 'ipa';
     state.view = 'explore';
+    state.task = 'decodable';
     state.exploreWord = "didn't";
     const hash = encodeState(ds, state);
     expect(decodeState(ds, '#' + hash)).toEqual(state);
+
+    // A tab name survives, and the decodable tab always means a decodable search.
+    const family = defaultState();
+    family.task = 'family';
+    family.query.all = [unit(['a-e_e', 'k_k'], 'end')];
+    family.query.filters = { ...family.query.filters, syllablesMax: 1 };
+    expect(encodeState(ds, family)).toBe('tab=family&all=a-e_e+k_k:e&syl=-1');
+    expect(decodeState(ds, '#tab=family&all=a-e_e+k_k:e&syl=-1')).toEqual(family);
+    expect(decodeState(ds, '#tab=decodable').query.decodable).toBe(true);
+    expect(decodeState(ds, '#tab=nonsense').task).toBe('find');
 
     // Turning every limit off is different from the default limits.
     const open = defaultState();

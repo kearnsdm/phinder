@@ -2,6 +2,8 @@
 //   Spelling mode:  1 Graphemes -> 2 Phonemes   (as in the first Phinder)
 //   Sound mode:     1 Phonemes  -> 2 Graphemes
 //   Word-part mode: 1 Prefixes,    2 Suffixes
+// The tabs of the word-list screen reuse this component and narrow it with
+// the optional props (which graphemes to offer, which sounds, the headings).
 
 import { useMemo, useState } from 'react';
 import { graphemeLabel, phonemeLabel, type Dataset, type Gpc } from '../lib/dataset';
@@ -11,30 +13,53 @@ import type { Stats } from '../lib/stats';
 
 export type PickerMode = 'spelling' | 'sound' | 'part';
 
-const DEFAULT_PATTERNS = ['a', 'ar', 'ck', 'e', 'ea', 'ee', 'igh', 'i-e', 'k', 'm', 'oa', 'ow', 'qu', 'x', 'y'];
-const MIN_CELLS = 12; // the phoneme grid always shows at least 3 rows of 4, as before
+/** The first grid of the first Phinder. */
+export const DEFAULT_PATTERNS = ['a', 'ar', 'ck', 'e', 'ea', 'ee', 'igh', 'i-e', 'k', 'm', 'oa', 'ow', 'qu', 'x', 'y'];
+const MIN_CELLS = 12; // the second grid always shows at least 3 rows of 4, as before
+
+const MODE_LABEL: Record<PickerMode, string> = { spelling: 'Spelling', sound: 'Sound', part: 'Word part' };
 
 interface Props {
   ds: Dataset;
   stats: Stats;
   notation: Notation;
   mode: PickerMode;
+  /** The choices in the "Start with" switch. With fewer than two, the switch is not shown. */
+  modes: PickerMode[];
   onMode: (m: PickerMode) => void;
   onNotation: (n: Notation) => void;
   onPickGpc: (id: number) => void;
   onPickAffix: (id: string) => void;
   onHelp: () => void;
+  /** Graphemes shown in grid 1 before "…" is clicked. Default: the first Phinder's grid. */
+  shortList?: string[];
+  /** Limits the graphemes offered. */
+  graphemeFilter?: (grapheme: string) => boolean;
+  /** Limits the sound spellings offered in grid 2. */
+  gpcFilter?: (g: Gpc) => boolean;
+  heading1?: string;
+  heading2?: string;
+  searchPlaceholder?: string;
+  /** When set, the grids are replaced by this note. */
+  closedNote?: string;
 }
 
 const percent = (part: number, whole: number) => (whole > 0 ? `${Math.round((100 * part) / whole)}%` : '');
 
-export function Picker({ ds, stats, notation, mode, onMode, onNotation, onPickGpc, onPickAffix, onHelp }: Props) {
+export function Picker(props: Props) {
+  const { ds, stats, notation, mode, modes, onMode, onNotation, onPickGpc, onPickAffix, onHelp } = props;
   const [search, setSearch] = useState('');
   const [showAll, setShowAll] = useState(false);
   const [grapheme, setGrapheme] = useState<string | null>(null);
   const [phoneme, setPhoneme] = useState<number | null>(null);
 
-  const allGraphemes = useMemo(() => [...stats.byGrapheme.keys()].sort(), [stats]);
+  const { graphemeFilter, gpcFilter } = props;
+  const shortList = props.shortList ?? DEFAULT_PATTERNS;
+
+  const allGraphemes = useMemo(
+    () => [...stats.byGrapheme.keys()].filter((g) => !graphemeFilter || graphemeFilter(g)).sort(),
+    [stats, graphemeFilter],
+  );
 
   const graphemeCells = useMemo(() => {
     const text = search.trim().toLowerCase();
@@ -42,8 +67,8 @@ export function Picker({ ds, stats, notation, mode, onMode, onNotation, onPickGp
       const hits = allGraphemes.filter((g) => g.includes(text));
       return [...hits.filter((g) => g.startsWith(text)), ...hits.filter((g) => !g.startsWith(text))];
     }
-    return showAll ? allGraphemes : DEFAULT_PATTERNS.filter((g) => stats.byGrapheme.has(g));
-  }, [search, showAll, allGraphemes, stats]);
+    return showAll ? allGraphemes : shortList.filter((g) => allGraphemes.includes(g));
+  }, [search, showAll, allGraphemes, shortList]);
 
   const phonemeGroups = useMemo(() => {
     const text = search.trim().toLowerCase();
@@ -59,7 +84,7 @@ export function Picker({ ds, stats, notation, mode, onMode, onNotation, onPickGp
   }, [ds, stats, search, notation]);
 
   // Step 2 cells: the sound spellings for the grapheme or phoneme chosen in step 1.
-  const step2: Gpc[] =
+  const step2All: Gpc[] =
     mode === 'spelling'
       ? grapheme
         ? (stats.byGrapheme.get(grapheme)?.gpcs ?? []).map((id) => ds.gpcs[id])
@@ -67,6 +92,7 @@ export function Picker({ ds, stats, notation, mode, onMode, onNotation, onPickGp
       : mode === 'sound' && phoneme !== null
         ? stats.byPhoneme[phoneme].gpcs.map((id) => ds.gpcs[id])
         : [];
+  const step2 = gpcFilter ? step2All.filter(gpcFilter) : step2All;
   const step2Total =
     mode === 'spelling'
       ? grapheme
@@ -92,162 +118,161 @@ export function Picker({ ds, stats, notation, mode, onMode, onNotation, onPickGp
       <div key={`blank${k}`} className="cell blank" aria-hidden />
     ));
 
+  const heading1 = props.heading1 ?? (mode === 'spelling' ? 'Graphemes' : mode === 'sound' ? 'Phonemes' : 'Prefixes');
+  const heading2 = props.heading2 ?? (mode === 'spelling' ? 'Phonemes' : mode === 'sound' ? 'Graphemes' : 'Suffixes');
+  const showMore = !search.trim() && allGraphemes.length > shortList.filter((g) => allGraphemes.includes(g)).length;
+
   return (
     <div className="picker">
-      <div className="mode-switch" role="group" aria-label="Start with">
-        <span className="mode-label">Start with</span>
-        {(
-          [
-            ['spelling', 'Spelling'],
-            ['sound', 'Sound'],
-            ['part', 'Word part'],
-          ] as [PickerMode, string][]
-        ).map(([m, label]) => (
-          <button key={m} type="button" className={mode === m ? 'toggle on' : 'toggle'} aria-pressed={mode === m} onClick={() => changeMode(m)}>
-            {label}
-          </button>
-        ))}
-      </div>
-
-      <div className="picker-grids">
-        {/* ---------------- step 1 ---------------- */}
-        <div className="picker-col">
-          <h2 className="heading">
-            <span className="num">1</span>
-            {mode === 'spelling' ? 'Graphemes' : mode === 'sound' ? 'Phonemes' : 'Prefixes'}
-            <button type="button" className="help-icon" title="Help" aria-label="Help" onClick={onHelp}>
-              ?
+      {modes.length > 1 && (
+        <div className="mode-switch" role="group" aria-label="Start with">
+          <span className="mode-label">Start with</span>
+          {modes.map((m) => (
+            <button key={m} type="button" className={mode === m ? 'toggle on' : 'toggle'} aria-pressed={mode === m} onClick={() => changeMode(m)}>
+              {MODE_LABEL[m]}
             </button>
-          </h2>
-
-          {mode === 'spelling' && (
-            <div className="grid scroll" role="listbox" aria-label="Graphemes">
-              {graphemeCells.map((g) => (
-                <button
-                  key={g}
-                  type="button"
-                  role="option"
-                  aria-selected={grapheme === g}
-                  className={grapheme === g ? 'cell picked' : 'cell'}
-                  onClick={() => setGrapheme(g)}
-                >
-                  {graphemeLabel(g) === g ? g : '#'}
-                </button>
-              ))}
-              {!search.trim() && (
-                <button
-                  type="button"
-                  className="cell"
-                  title={showAll ? 'Show the short list' : `Show all ${allGraphemes.length} graphemes`}
-                  onClick={() => setShowAll(!showAll)}
-                >
-                  {showAll ? '‹' : '…'}
-                </button>
-              )}
-              {search.trim() && graphemeCells.length === 0 && <div className="grid-note">No grapheme has those letters.</div>}
-              {blanks(graphemeCells.length + (search.trim() ? 0 : 1), 16)}
-            </div>
-          )}
-
-          {mode === 'sound' && (
-            <div className="grid scroll" role="listbox" aria-label="Phonemes">
-              {phonemeGroups.map(({ group, items }) => (
-                <div key={group} className="grid-group">
-                  <div className="grid-group-label">{group}</div>
-                  {items.map((p) => (
-                    <button
-                      key={p.code}
-                      type="button"
-                      role="option"
-                      aria-selected={phoneme === p.index}
-                      className={`${phoneme === p.index ? 'cell picked' : 'cell'} sound${phonemeLabel(p, notation).length > 5 ? ' long' : ''}`}
-                      title={`${stats.byPhoneme[p.index].gpcs.length} spellings`}
-                      onClick={() => setPhoneme(p.index)}
-                    >
-                      {phonemeLabel(p, notation)}
-                    </button>
-                  ))}
-                  {blanks(items.length)}
-                </div>
-              ))}
-              {phonemeGroups.length === 0 && <div className="grid-note">No sound matches.</div>}
-            </div>
-          )}
-
-          {mode === 'part' && (
-            <div className="grid scroll wide">
-              {AFFIXES.filter((a) => a.kind === 'prefix').map((a) => (
-                <button key={a.id} type="button" className="cell part" title={`${a.label}: ${a.meaning}`} onClick={() => onPickAffix(a.id)}>
-                  {a.forms[0].text}-
-                </button>
-              ))}
-            </div>
-          )}
-
-          {mode !== 'part' ? (
-            <div className="search-box">
-              <input
-                type="text"
-                className="inputform"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder={mode === 'spelling' ? 'Search Letter Pattern' : 'Search Sound'}
-                aria-label={mode === 'spelling' ? 'Search letter pattern' : 'Search sound'}
-              />
-              <span className="search-icon" aria-hidden>
-                &#9906;
-              </span>
-            </div>
-          ) : (
-            <p className="picker-note">Word parts are found by rule. Check the list before you use it.</p>
-          )}
+          ))}
         </div>
+      )}
 
-        {/* ---------------- step 2 ---------------- */}
-        <div className="picker-col">
-          <h2 className="heading">
-            <span className="num">2</span>
-            {mode === 'spelling' ? 'Phonemes' : mode === 'sound' ? 'Graphemes' : 'Suffixes'}
-          </h2>
+      {props.closedNote ? (
+        <p className="picker-closed">{props.closedNote}</p>
+      ) : (
+        <div className="picker-grids">
+          {/* ---------------- step 1 ---------------- */}
+          <div className="picker-col">
+            <h2 className="heading">
+              <span className="num">1</span>
+              {heading1}
+              <button type="button" className="help-icon" title="Help" aria-label="Help" onClick={onHelp}>
+                ?
+              </button>
+            </h2>
 
-          {mode !== 'part' ? (
-            <div className="grid scroll" aria-label={mode === 'spelling' ? 'Phonemes' : 'Graphemes'}>
-              {step2.map((g) => {
-                const label = mode === 'spelling' ? phonemeLabel(g.phoneme, notation) : graphemeLabel(g.grapheme) === g.grapheme ? g.grapheme : '#';
-                return (
+            {mode === 'spelling' && (
+              <div className="grid scroll" role="listbox" aria-label={heading1}>
+                {graphemeCells.map((g) => (
                   <button
-                    key={g.id}
+                    key={g}
                     type="button"
-                    className={`cell${mode === 'spelling' ? ' sound' : ''}${label.length > 5 ? ' long' : ''}`}
-                    title={cellTitle(g)}
-                    onClick={() => onPickGpc(g.id)}
+                    role="option"
+                    aria-selected={grapheme === g}
+                    className={grapheme === g ? 'cell picked' : 'cell'}
+                    onClick={() => setGrapheme(g)}
                   >
-                    {label}
+                    {graphemeLabel(g) === g ? g : '#'}
                   </button>
-                );
-              })}
-              {blanks(step2.length, MIN_CELLS)}
-            </div>
-          ) : (
-            <div className="grid scroll wide">
-              {AFFIXES.filter((a) => a.kind === 'suffix').map((a) => (
-                <button key={a.id} type="button" className="cell part" title={`${a.label}: ${a.meaning}`} onClick={() => onPickAffix(a.id)}>
-                  -{a.forms[0].text}
-                </button>
-              ))}
-            </div>
-          )}
+                ))}
+                {showMore && (
+                  <button type="button" className="cell" title={showAll ? 'Show the short list' : `Show all ${allGraphemes.length}`} onClick={() => setShowAll(!showAll)}>
+                    {showAll ? '‹' : '…'}
+                  </button>
+                )}
+                {search.trim() && graphemeCells.length === 0 && <div className="grid-note">Nothing here has those letters.</div>}
+                {blanks(graphemeCells.length + (showMore ? 1 : 0), 16)}
+              </div>
+            )}
 
-          <div className="notation" role="group" aria-label="Sound notation">
-            <button type="button" className={notation === 'sc' ? 'toggle on' : 'toggle'} aria-pressed={notation === 'sc'} onClick={() => onNotation('sc')}>
-              Sound Code
-            </button>
-            <button type="button" className={notation === 'ipa' ? 'toggle on' : 'toggle'} aria-pressed={notation === 'ipa'} onClick={() => onNotation('ipa')}>
-              IPA
-            </button>
+            {mode === 'sound' && (
+              <div className="grid scroll" role="listbox" aria-label="Phonemes">
+                {phonemeGroups.map(({ group, items }) => (
+                  <div key={group} className="grid-group">
+                    <div className="grid-group-label">{group}</div>
+                    {items.map((p) => (
+                      <button
+                        key={p.code}
+                        type="button"
+                        role="option"
+                        aria-selected={phoneme === p.index}
+                        className={`${phoneme === p.index ? 'cell picked' : 'cell'} sound${phonemeLabel(p, notation).length > 5 ? ' long' : ''}`}
+                        title={`${stats.byPhoneme[p.index].gpcs.length} spellings`}
+                        onClick={() => setPhoneme(p.index)}
+                      >
+                        {phonemeLabel(p, notation)}
+                      </button>
+                    ))}
+                    {blanks(items.length)}
+                  </div>
+                ))}
+                {phonemeGroups.length === 0 && <div className="grid-note">No sound matches.</div>}
+              </div>
+            )}
+
+            {mode === 'part' && (
+              <div className="grid scroll wide">
+                {AFFIXES.filter((a) => a.kind === 'prefix').map((a) => (
+                  <button key={a.id} type="button" className="cell part" title={`${a.label}: ${a.meaning}`} onClick={() => onPickAffix(a.id)}>
+                    {a.forms[0].text}-
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {mode !== 'part' ? (
+              <div className="search-box">
+                <input
+                  type="text"
+                  className="inputform"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder={props.searchPlaceholder ?? (mode === 'spelling' ? 'Search Letter Pattern' : 'Search Sound')}
+                  aria-label={mode === 'spelling' ? 'Search letter pattern' : 'Search sound'}
+                />
+                <span className="search-icon" aria-hidden>
+                  &#9906;
+                </span>
+              </div>
+            ) : (
+              <p className="picker-note">Word parts are found by rule. Check the list before you use it.</p>
+            )}
+          </div>
+
+          {/* ---------------- step 2 ---------------- */}
+          <div className="picker-col">
+            <h2 className="heading">
+              <span className="num">2</span>
+              {heading2}
+            </h2>
+
+            {mode !== 'part' ? (
+              <div className="grid scroll" aria-label={heading2}>
+                {step2.map((g) => {
+                  const label = mode === 'spelling' ? phonemeLabel(g.phoneme, notation) : graphemeLabel(g.grapheme) === g.grapheme ? g.grapheme : '#';
+                  return (
+                    <button
+                      key={g.id}
+                      type="button"
+                      className={`cell${mode === 'spelling' ? ' sound' : ''}${label.length > 5 ? ' long' : ''}`}
+                      title={cellTitle(g)}
+                      onClick={() => onPickGpc(g.id)}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+                {blanks(step2.length, MIN_CELLS)}
+              </div>
+            ) : (
+              <div className="grid scroll wide">
+                {AFFIXES.filter((a) => a.kind === 'suffix').map((a) => (
+                  <button key={a.id} type="button" className="cell part" title={`${a.label}: ${a.meaning}`} onClick={() => onPickAffix(a.id)}>
+                    -{a.forms[0].text}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <div className="notation" role="group" aria-label="Sound notation">
+              <button type="button" className={notation === 'sc' ? 'toggle on' : 'toggle'} aria-pressed={notation === 'sc'} onClick={() => onNotation('sc')}>
+                Sound Code
+              </button>
+              <button type="button" className={notation === 'ipa' ? 'toggle on' : 'toggle'} aria-pressed={notation === 'ipa'} onClick={() => onNotation('ipa')}>
+                IPA
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

@@ -9,12 +9,14 @@ version (in the repository root) and adds new ways to search.
 | --- | --- |
 | Search | Matching is exact on whole sound spellings. The first version missed words when the same letters first appeared inside a longer grapheme (for example `e = /ĕ/` in "aesthetic"). |
 | Grids | Every grapheme and every phoneme can be reached. The grids scroll when there are more than fit. |
-| Start with a sound | "Start with: Sound" picks a phoneme first, then one of its spellings. |
-| Word parts | "Start with: Word part" searches for prefixes and suffixes. They are found by rule (see `src/lib/morph.ts`), so results need checking. |
+| Tabs | Four tabs above the grids, one for each kind of list: "Find words," "Word family," "Decodable list," "Word parts." Each tab shows only what its task needs. "Find words" and "Word parts" share one search; the other two keep their own. |
+| Start with a sound | In "Find words" and "Decodable list," "Start with: Sound" picks a phoneme first, then one of its spellings. |
+| Word family | Choose a vowel spelling, then the letters after it (ake), or the letters before a vowel (ca). |
+| Word parts | Prefixes and suffixes. They are found by rule (see `src/lib/morph.ts`), so results need checking. |
 | Join (+) | Joined sound spellings form one unit. A split digraph is written around the next grapheme (`a-e` + `k` = `ake`). Units are labelled "rime" or "body" when they have that shape. |
 | Position | Click a selected sound spelling to require it at the start, in the middle, or at the end of the word. |
-| Advanced | One OR row (at least one of these) and one NOT row (none of these). |
-| Decodable words only | A KNOWN row holds the sound spellings students know. The list shows only words made entirely from them. |
+| Or, and not | Under the selection, "+ or one of these" and "+ but none of these" add an OR row and a NOT row. |
+| Decodable list | The tab holds the sound spellings students know. The list shows only words made entirely from them. "+ words must also have" adds sound spellings that every word must contain. |
 | Options | Limits apply at once. The limits in force are shown above the list. A word-set switch keeps only words that have a frequency value. |
 | Word list | The count follows "Filter Words". Small frequencies are shown (0.31, not blank). The sort choice is kept. |
 | Export | Copy the words, download a spreadsheet file (CSV), print a list, print word cards. |

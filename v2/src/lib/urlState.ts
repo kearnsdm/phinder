@@ -3,6 +3,7 @@
 // ("ea_i"), not by number, so links keep working when the word data changes.
 //
 // Position flags: :s start, :m middle, :e end.
+// "tab" names the tab of the word-list screen (family, decodable, parts).
 // Example: #all=ea_i,a-e_e+k_k:e&dec=1&taught=m_m,a_a&syl=1-2&sort=alpha-asc
 
 import type { Dataset } from './dataset';
@@ -20,8 +21,17 @@ import {
 
 export type View = 'find' | 'explore';
 
+/**
+ * The tab of the word-list screen. "find" and "parts" are two ways into the
+ * same search; "family" and "decodable" each keep a search of their own.
+ */
+export type Task = 'find' | 'parts' | 'family' | 'decodable';
+const TASKS: Task[] = ['find', 'parts', 'family', 'decodable'];
+
 export interface AppState {
   view: View;
+  task: Task;
+  /** The search of the tab named by `task`. */
   query: Query;
   sort: SortKey;
   notation: Notation;
@@ -31,6 +41,7 @@ export interface AppState {
 
 export const defaultState = (): AppState => ({
   view: 'find',
+  task: 'find',
   query: { ...emptyQuery(), filters: defaultFilters() },
   sort: 'freq-desc',
   notation: 'sc',
@@ -86,6 +97,7 @@ export function encodeState(ds: Dataset, state: AppState): string {
     if (value !== null && value !== '') parts.push(`${key}=${value}`);
   };
   if (state.view !== 'find') add('view', state.view);
+  if (state.task !== 'find') add('tab', state.task);
   if (state.exploreWord) add('word', enc(state.exploreWord));
   for (const group of ['all', 'any', 'none'] as const) {
     add(group, q[group].map((c) => encodeCriterion(ds, c)).join(','));
@@ -119,6 +131,8 @@ export function decodeState(ds: Dataset, hash: string): AppState {
   };
 
   if (params.get('view') === 'explore') state.view = 'explore';
+  const tab = params.get('tab') as Task | undefined;
+  if (tab && TASKS.includes(tab)) state.task = tab;
   state.exploreWord = safe(() => decodeURIComponent(params.get('word') ?? ''), '');
 
   const q = state.query;
@@ -130,7 +144,7 @@ export function decodeState(ds: Dataset, hash: string): AppState {
       .map((c) => safe(() => decodeCriterion(ds, c), null))
       .filter((c): c is Criterion => c !== null);
   }
-  q.decodable = params.get('dec') === '1';
+  q.decodable = params.get('dec') === '1' || state.task === 'decodable';
   const taught = params.get('taught');
   if (taught) {
     const ids = taught.split(',').map((k) => safe(() => ds.gpcByKey.get(decodeURIComponent(k))?.id, undefined));

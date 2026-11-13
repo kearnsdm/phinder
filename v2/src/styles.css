@@ -15,7 +15,7 @@
   /* TRIAL (Nov 13, 2026): the text people read (list words, labels, links) uses
      the darker green and regular weight, for contrast. To go back to the old
      look, set --ink to var(--green) and --ink-font to dinLight. */
-  --ink: #238d57; /* a green from the first version (its search icon); Devin found #1d7447 too dark */
+  --ink: #27a366; /* one step darker than the original green; Devin asked not to stray far from it */
   --ink-hover: var(--green-deep);
   --ink-font: din;
   --panel: #f6f1f1;
@@ -72,6 +72,16 @@ button:disabled { cursor: default; }
 /* ---- layout ---- */
 .main { display: grid; grid-template-columns: 390px minmax(0, 1fr); column-gap: 0; align-items: start; }
 .left { padding-right: 30px; min-height: 560px; display: flex; flex-direction: column; }
+
+/* ---- tabs: what the person wants to find ---- */
+.tabs { display: flex; margin-bottom: 16px; width: 358px; max-width: 100%; }
+.tab {
+  flex: 1 1 auto; height: 34px; padding: 0 6px; font-family: dinMedium; font-size: 14px; white-space: nowrap;
+  color: var(--green-dark); background: var(--panel); border-bottom: 3px solid transparent;
+}
+.tab:hover { background: var(--hover); }
+.tab.on { background: var(--green-dark); color: #fff; }
+.tab.on:hover { background: #007f4a; }
 
 /* ---- step 1 and 2: the grids ---- */
 .mode-switch, .control { display: flex; align-items: center; margin-bottom: 14px; }
@@ -132,7 +142,7 @@ button:disabled { cursor: default; }
 .selection { min-height: 92px; }
 
 .sel-row { display: flex; align-items: flex-start; margin-bottom: 8px; min-height: 44px; }
-.sel-row.dim { opacity: 0.45; }
+.sel-row.dim { opacity: 0.62; }
 .sel-row.dim:hover { opacity: 1; cursor: pointer; }
 .sel-row.active .row-label { background: var(--green-dark); color: #fff; }
 .row-label {
@@ -140,6 +150,20 @@ button:disabled { cursor: default; }
   font-family: dinMedium; font-size: 12px; background: var(--panel); border: 1px solid var(--line);
 }
 .row-items { display: flex; flex-wrap: wrap; align-items: flex-start; row-gap: 6px; min-width: 0; }
+.row-close { margin-left: 5px; font-size: 9px; color: inherit; opacity: 0.7; vertical-align: 1px; }
+.row-close:hover { opacity: 1; }
+.row-adds { display: flex; flex-wrap: wrap; gap: 4px 18px; margin: 0 0 6px; }
+
+/* word family tab */
+.family .control { margin-bottom: 10px; }
+.family-row { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 14px; min-height: 36px; }
+.family-chip { min-width: 96px; }
+.family-chip .chip-label { cursor: default; padding: 3px 10px; }
+.family-actions { display: flex; gap: 14px; }
+.family-hint { font-family: var(--ink-font); font-size: 13px; margin: 6px 0 0; }
+.family-next { display: block; margin-top: 4px; font-family: dinMedium; }
+.family-check { margin-top: 12px; }
+.picker-closed { font-family: var(--ink-font); font-size: 13px; width: 358px; max-width: 100%; min-height: 120px; margin: 0; }
 .row-empty { font-family: dinLight; font-size: 13px; line-height: 30px; }
 
 .chip-wrap { position: relative; }
@@ -182,6 +206,10 @@ button:disabled { cursor: default; }
 .history-title { font-size: 13px; margin-right: 4px; }
 .history-item { min-width: 75px; height: 20px; padding: 0 6px; background: var(--panel); border: 1px solid var(--line); font-size: 12px; font-weight: 400; }
 .history-item:hover { background: var(--hover); }
+/* Beside the list on wide screens, as in the first version; a short strip under it otherwise. */
+@media (max-width: 1419px) {
+  .history-item:nth-of-type(n + 5) { display: none; }
+}
 @media (min-width: 1420px) {
   .history { position: absolute; right: 100%; top: 0; margin: 0 22px 0 0; width: 90px; flex-direction: column; flex-wrap: nowrap; gap: 0; text-align: center; }
   .history-title { margin: 0 0 2px; }
@@ -200,8 +228,7 @@ button:disabled { cursor: default; }
 
 .check { display: flex; align-items: center; gap: 5px; color: var(--ink); cursor: pointer; white-space: nowrap; }
 .check input { margin: 0; accent-color: var(--green-dark); }
-.search-links { display: flex; align-items: center; gap: 18px; margin-top: 10px; }
-.search-links .check { margin-right: auto; }
+.search-links { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
 
 /* ---- step 4: word list ---- */
 .right { min-width: 0; }
@@ -325,6 +352,8 @@ button:disabled { cursor: default; }
 .modal h3 { margin: 16px 0 6px; font-family: dinMedium; font-size: 15px; color: var(--green); }
 .modal ol, .modal ul { margin: 0; padding-left: 22px; }
 .modal li { margin-bottom: 6px; }
+.modal p { margin: 0 0 6px; }
+.modal ol + ul { margin-top: 6px; }
 .modal b { font-family: dinMedium; font-weight: normal; }
 .modal-x { position: absolute; right: 14px; top: 12px; color: var(--green); font-size: 15px; }
 

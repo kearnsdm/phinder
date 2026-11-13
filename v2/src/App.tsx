@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import config from '../pack.config.json';
 import { Explore } from './components/Explore';
+import { FamilyBox, type FamilyKind, type FamilyPhase } from './components/FamilyBox';
 import { Help } from './components/Help';
 import { Picker, type PickerMode } from './components/Picker';
 import { PrintSheet, type PrintMode } from './components/PrintSheet';
 import { Selection } from './components/Selection';
 import { WordList } from './components/WordList';
-import { inlineAssets, loadDataset, type Dataset } from './lib/dataset';
+import { gpcsOf, inlineAssets, loadDataset, type Dataset, type Gpc } from './lib/dataset';
 import {
   addAffix,
   addCriterion,
@@ -22,15 +23,40 @@ import {
 } from './lib/edit';
 import { resultsToCsv, resultsToText } from './lib/export';
 import { Morph } from './lib/morph';
-import { hasCriteria, type Criterion, type Query } from './lib/query';
+import { defaultFilters, emptyQuery, hasCriteria, type Criterion, type Query, type UnitCriterion } from './lib/query';
 import { search, sortResults } from './lib/search';
 import { computeStats } from './lib/stats';
-import { decodeState, defaultState, encodeState, type AppState } from './lib/urlState';
+import { bodyRime } from './lib/units';
+import { decodeState, defaultState, encodeState, type AppState, type Task } from './lib/urlState';
 
 type Alert = { kind: 'ok' | 'bad'; text: string; id: number };
 
 const LOGO = inlineAssets().logo ?? `${import.meta.env.BASE_URL}logo.png`;
 const SITE = 'https://www.devinkearns.com/';
+
+const TABS: [Task, string][] = [
+  ['find', 'Find words'],
+  ['family', 'Word family'],
+  ['decodable', 'Decodable list'],
+  ['parts', 'Word parts'],
+];
+
+/**
+ * Each tab works on a search. "Find words" and "Word parts" are two ways into
+ * the same search; "Word family" and "Decodable list" each keep their own.
+ */
+type Slot = 'search' | 'family' | 'decodable';
+const slotOf = (task: Task): Slot => (task === 'family' ? 'family' : task === 'decodable' ? 'decodable' : 'search');
+
+const startQueries = (): Record<Slot, Query> => ({
+  search: { ...emptyQuery(), filters: defaultFilters() },
+  family: { ...emptyQuery(), filters: { ...defaultFilters(), syllablesMax: 1 } },
+  decodable: { ...emptyQuery(), filters: defaultFilters(), decodable: true },
+});
+
+const LETTERS = 'abcdefghijklmnopqrstuvwxyz'.split('');
+const isVowelGpc = (g: Gpc) => g.phoneme.struct === 'V' || g.phoneme.struct === 'VC' || g.phoneme.struct === 'CV';
+const isConsonantGpc = (g: Gpc) => !isVowelGpc(g); // consonants and silent letters
 
 async function copyText(text: string): Promise<boolean> {
   try {
@@ -63,9 +89,13 @@ export function App() {
   const [ds, setDs] = useState<Dataset | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [state, setState] = useState<AppState>(defaultState);
+  /** The searches of the tabs that are not showing. */
+  const stash = useRef<Record<Slot, Query>>(startQueries());
   const [activeRow, setActiveRow] = useState<Row>('all');
-  const [advanced, setAdvanced] = useState(false);
-  const [mode, setMode] = useState<PickerMode>('spelling');
+  const [openRows, setOpenRows] = useState<Row[]>([]);
+  const [findMode, setFindMode] = useState<PickerMode>('spelling');
+  const [familyKind, setFamilyKind] = useState<FamilyKind>('rime');
+  const [bodyWantsVowel, setBodyWantsVowel] = useState(false);
   const [help, setHelp] = useState(false);
   const [alert, setAlert] = useState<Alert | null>(null);
   const [history, setHistory] = useState<Criterion[]>([]);
@@ -79,7 +109,7 @@ export function App() {
         if (cancelled) return;
         const initial = decodeState(data, window.location.hash);
         setState(initial);
-        setAdvanced(initial.query.any.length > 0 || initial.query.none.length > 0);
+        setActiveRow(initial.task === 'decodable' ? 'taught' : 'all');
         setDs(data);
       })
       .catch((e: unknown) => !cancelled && setError(e instanceof Error ? e.message : 'The word data could not be loaded.'));
@@ -112,6 +142,7 @@ export function App() {
       const next = decodeState(ds, window.location.hash);
       lastPage.current = `${next.view}:${next.exploreWord}`;
       setState(next);
+      setActiveRow(next.task === 'decodable' ? 'taught' : 'all');
     };
     window.addEventListener('popstate', onPop);
     window.addEventListener('hashchange', onPop);
@@ -141,10 +172,40 @@ export function App() {
     };
   }, [print]);
 
-  const { query, notation, sort } = state;
+  const { query, notation, sort, task } = state;
   const morph = useMemo(() => (ds ? new Morph(ds) : null), [ds]);
   const stats = useMemo(() => (ds ? computeStats(ds, query.wordSet) : null), [ds, query.wordSet]);
   const results = useMemo(() => (ds && morph ? sortResults(ds, search(ds, query, morph), sort) : []), [ds, morph, query, sort]);
+
+  // Graphemes for the "Word family" tab: vowel spellings, and the letters before and after them.
+  // The first screen of each grid holds the 15 used most in that place in one-syllable words.
+  const familyLists = useMemo(() => {
+    if (!ds || !stats) return null;
+    const onset = new Map<string, number>();
+    const nucleus = new Map<string, number>();
+    const coda = new Map<string, number>();
+    const bump = (m: Map<string, number>, grapheme: string) => m.set(grapheme, (m.get(grapheme) ?? 0) + 1);
+    for (let i = 0; i < ds.n; i++) {
+      if (ds.syllables[i] !== 1) continue;
+      const parts = bodyRime(gpcsOf(ds, ds.seq[i]));
+      if (!parts) continue;
+      parts.onset.forEach((g) => bump(onset, g.grapheme));
+      bump(nucleus, parts.nucleus.grapheme);
+      parts.coda.forEach((g) => bump(coda, g.grapheme));
+    }
+    const make = (want: (g: Gpc) => boolean, rank: Map<string, number>) => {
+      const offered = new Set<string>();
+      for (const [grapheme, total] of stats.byGrapheme) {
+        if (total.gpcs.some((id) => want(ds.gpcs[id]))) offered.add(grapheme);
+      }
+      const short = [...offered]
+        .filter((g) => rank.has(g))
+        .sort((a, b) => rank.get(b)! - rank.get(a)!)
+        .slice(0, 15);
+      return { filter: (grapheme: string) => offered.has(grapheme), short, want };
+    };
+    return { vowel: make(isVowelGpc, nucleus), ending: make(isConsonantGpc, coda), beginning: make(isConsonantGpc, onset) };
+  }, [ds, stats]);
 
   const setQuery = useCallback((fn: (q: Query) => Query) => setState((s) => ({ ...s, query: fn(s.query) })), []);
   const remember = (c: Criterion) =>
@@ -157,7 +218,7 @@ export function App() {
       </div>
     );
   }
-  if (!ds || !morph || !stats) {
+  if (!ds || !morph || !stats || !familyLists) {
     return (
       <div className="container">
         <img className="logo" src={LOGO} alt="Phinder" width={130} height={80} />
@@ -166,10 +227,53 @@ export function App() {
     );
   }
 
+  // ---- tabs ----
+  /** Shows a tab. `withQuery` replaces that tab's search (used by Explore a Word). */
+  const openTab = (next: Task, withQuery?: Query) => {
+    const from = slotOf(task);
+    const to = slotOf(next);
+    if (from !== to) stash.current[from] = query;
+    const nextQuery = withQuery ?? (from === to ? query : stash.current[to]);
+    setState((s) => ({ ...s, view: 'find', task: next, query: nextQuery }));
+    setActiveRow(to === 'decodable' ? 'taught' : 'all');
+    setOpenRows([]);
+  };
+  /** The search of the "Decodable list" tab, wherever the person is now. */
+  const decodableQuery = slotOf(task) === 'decodable' ? query : stash.current.decodable;
+
+  // ---- word family ----
+  const familyUnit: UnitCriterion | null = task === 'family' && query.all[0]?.type === 'unit' ? query.all[0] : null;
+  const kind: FamilyKind = familyUnit ? (familyUnit.position === 'start' ? 'body' : 'rime') : familyKind;
+  const familyHasVowel = !!familyUnit && familyUnit.gpcs.some((id) => isVowelGpc(ds.gpcs[id]));
+  const phase: FamilyPhase =
+    kind === 'rime' ? (familyUnit ? 'ending' : 'vowel') : familyHasVowel ? 'done' : bodyWantsVowel ? 'vowel' : 'beginning';
+  const pickFamily = (id: number) => {
+    setQuery((q) => {
+      const unit = q.all[0]?.type === 'unit' ? q.all[0] : null;
+      const next: UnitCriterion = unit
+        ? { ...unit, gpcs: [...unit.gpcs, id] }
+        : { type: 'unit', gpcs: [id], position: kind === 'rime' ? 'end' : 'start' };
+      return { ...q, all: [next] };
+    });
+    setBodyWantsVowel(false);
+  };
+  const undoFamily = () =>
+    setQuery((q) => {
+      const unit = q.all[0]?.type === 'unit' ? q.all[0] : null;
+      if (!unit || unit.gpcs.length <= 1) return { ...q, all: [] };
+      return { ...q, all: [{ ...unit, gpcs: unit.gpcs.slice(0, -1) }] };
+    });
+  const startOverFamily = () => {
+    setQuery((q) => ({ ...q, all: [] }));
+    setBodyWantsVowel(false);
+  };
+  const familyGraphemes = phase === 'vowel' ? familyLists.vowel : phase === 'ending' ? familyLists.ending : familyLists.beginning;
+
+  // ---- choices from the grids ----
   const pickGpc = (id: number) => {
-    const unit: Criterion = { type: 'unit', gpcs: [id], position: 'any' };
+    if (task === 'family') return pickFamily(id);
     setQuery((q) => addGpc(q, activeRow, id));
-    remember(unit);
+    remember({ type: 'unit', gpcs: [id], position: 'any' });
   };
   const pickAffix = (affix: string) => {
     const row = activeRow === 'taught' ? 'all' : activeRow;
@@ -178,34 +282,41 @@ export function App() {
     remember({ type: 'affix', affix, keepsSound: true });
   };
 
-  const toggleAdvanced = (on: boolean) => {
-    setAdvanced(on);
-    if (!on) {
-      // Hidden rows must not keep shaping the list.
-      setQuery((q) => ({ ...q, any: [], none: [] }));
-      if (activeRow === 'any' || activeRow === 'none') setActiveRow('all');
-    }
+  const openRow = (row: Row) => {
+    setOpenRows((rows) => (rows.includes(row) ? rows : [...rows, row]));
+    setActiveRow(row);
   };
-  const toggleDecodable = (on: boolean) => {
-    setQuery((q) => ({ ...q, decodable: on }));
-    setActiveRow(on ? 'taught' : 'all');
+  const closeRow = (row: Row) => {
+    if (row !== 'taught') setQuery((q) => ({ ...q, [row]: [] }));
+    setOpenRows((rows) => rows.filter((r) => r !== row));
+    setActiveRow(task === 'decodable' ? 'taught' : 'all');
   };
 
   const onSearch = () => {
-    if (!hasCriteria(query)) say('bad', query.decodable ? 'Choose the sound spellings your students know' : 'Select one or more phonemes');
-    else if (results.length === 0) say('bad', 'No results found');
+    if (!hasCriteria(query)) {
+      say(
+        'bad',
+        task === 'decodable'
+          ? 'Choose the sound spellings your students know'
+          : task === 'family'
+            ? 'Choose a vowel spelling and an ending'
+            : task === 'parts'
+              ? 'Select a prefix or a suffix'
+              : 'Select one or more phonemes',
+      );
+    } else if (results.length === 0) say('bad', 'No results found');
     else say('ok', 'Done!');
     if (window.innerWidth < 900) document.querySelector('.wordlist')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  const onExport = async (kind: 'copy' | 'csv' | 'print-list' | 'print-cards', indexes: number[]) => {
-    if (kind === 'copy') {
+  const onExport = async (kindOfExport: 'copy' | 'csv' | 'print-list' | 'print-cards', indexes: number[]) => {
+    if (kindOfExport === 'copy') {
       const ok = await copyText(resultsToText(ds, indexes));
       say(ok ? 'ok' : 'bad', ok ? `Copied ${indexes.length.toLocaleString()} words` : 'The words could not be copied');
-    } else if (kind === 'csv') {
+    } else if (kindOfExport === 'csv') {
       download('phinder-word-list.csv', resultsToCsv(ds, indexes, notation), 'text/csv;charset=utf-8');
     } else {
-      setPrint({ mode: kind === 'print-list' ? 'list' : 'cards', indexes });
+      setPrint({ mode: kindOfExport === 'print-list' ? 'list' : 'cards', indexes });
     }
   };
 
@@ -216,28 +327,33 @@ export function App() {
 
   const clearAll = () => {
     setQuery((q) => ({ ...q, all: [], any: [], none: [] }));
-    setActiveRow(query.decodable ? 'taught' : 'all');
+    setOpenRows([]);
+    setBodyWantsVowel(false);
+    setActiveRow(task === 'decodable' ? 'taught' : 'all');
+  };
+
+  const setWordSet = (wordSet: Query['wordSet']) => {
+    // One choice for every tab.
+    for (const slot of Object.keys(stash.current) as Slot[]) stash.current[slot] = { ...stash.current[slot], wordSet };
+    setQuery((q) => ({ ...q, wordSet }));
   };
 
   const explore = (word: string) => setState((s) => ({ ...s, view: 'explore', exploreWord: word }));
   const showList = () => setState((s) => ({ ...s, view: 'find' }));
-  const findFromExplore = (criteria: Criterion[], oneSyllable?: boolean) => {
-    setAdvanced(false);
-    setActiveRow('all');
-    setState((s) => ({
-      ...s,
-      view: 'find',
-      query: {
-        ...s.query,
-        all: criteria,
-        any: [],
-        none: [],
-        filters: oneSyllable ? { ...s.query.filters, syllablesMin: null, syllablesMax: 1 } : s.query.filters,
-      },
-    }));
+  const findFromExplore = (criteria: Criterion[], family?: boolean) => {
+    const base = startQueries()[family ? 'family' : 'search'];
+    openTab(family ? 'family' : criteria.some((c) => c.type === 'affix') ? 'parts' : 'find', { ...base, wordSet: query.wordSet, all: criteria });
   };
 
   const anySelected = query.all.length + query.any.length + query.none.length > 0;
+  const emptyHint =
+    task === 'family'
+      ? 'Choose a vowel spelling and an ending to list a word family.'
+      : task === 'decodable'
+        ? 'Choose the sound spellings your students know to list the words they can read.'
+        : task === 'parts'
+          ? 'Choose a prefix or a suffix to make a word list.'
+          : 'Choose a grapheme, then a phoneme, to make a word list.';
 
   return (
     <div className="container">
@@ -261,39 +377,99 @@ export function App() {
       {state.view === 'find' ? (
         <div className="main">
           <div className="left">
-            <Picker
-              ds={ds}
-              stats={stats}
-              notation={notation}
-              mode={mode}
-              onMode={setMode}
-              onNotation={(n) => setState((s) => ({ ...s, notation: n }))}
-              onPickGpc={pickGpc}
-              onPickAffix={pickAffix}
-              onHelp={() => setHelp(true)}
-            />
+            <div className="tabs" role="tablist" aria-label="What do you want to find?">
+              {TABS.map(([t, label]) => (
+                <button key={t} type="button" role="tab" aria-selected={task === t} className={task === t ? 'tab on' : 'tab'} onClick={() => openTab(t)}>
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {task === 'family' ? (
+              <Picker
+                key={`family-${kind}-${phase}`}
+                ds={ds}
+                stats={stats}
+                notation={notation}
+                mode="spelling"
+                modes={[]}
+                onMode={() => {}}
+                onNotation={(n) => setState((s) => ({ ...s, notation: n }))}
+                onPickGpc={pickGpc}
+                onPickAffix={pickAffix}
+                onHelp={() => setHelp(true)}
+                shortList={familyGraphemes.short}
+                graphemeFilter={familyGraphemes.filter}
+                gpcFilter={familyGraphemes.want}
+                heading1={phase === 'vowel' ? 'Vowel Spelling' : phase === 'ending' ? 'Ending Letters' : 'Beginning Letters'}
+                heading2="Sound"
+                searchPlaceholder="Search Letters"
+                closedNote={phase === 'done' ? 'This beginning is complete. Click “start over” below to make another.' : undefined}
+              />
+            ) : (
+              <Picker
+                key={task}
+                ds={ds}
+                stats={stats}
+                notation={notation}
+                mode={task === 'parts' ? 'part' : findMode}
+                modes={task === 'parts' ? [] : ['spelling', 'sound']}
+                onMode={setFindMode}
+                onNotation={(n) => setState((s) => ({ ...s, notation: n }))}
+                onPickGpc={pickGpc}
+                onPickAffix={pickAffix}
+                onHelp={() => setHelp(true)}
+                shortList={task === 'decodable' ? LETTERS : undefined}
+              />
+            )}
 
             <div className="selection-wrap">
-              <Selection
-                ds={ds}
-                query={query}
-                notation={notation}
-                activeRow={activeRow}
-                advanced={advanced}
-                onActivate={setActiveRow}
-                onRemove={(row, index) => setQuery((q) => removeAt(q, row, index))}
-                onJoin={(row, index) => {
-                  const next = joinWithNext(query, row, index);
-                  setQuery(() => next);
-                  if (next[row][index]) remember(next[row][index]);
-                  say('ok', 'Combined!');
-                }}
-                onSplit={(row, index) => setQuery((q) => splitUnit(q, row, index))}
-                onPosition={(row, index, p) => setQuery((q) => setPosition(q, row, index, p))}
-                onKeepsSound={(row, index, v) => setQuery((q) => setKeepsSound(q, row, index, v))}
-                onClearTaught={() => setQuery((q) => ({ ...q, taught: [] }))}
-              />
-              {history.length > 0 && (
+              {task === 'family' ? (
+                <FamilyBox
+                  ds={ds}
+                  notation={notation}
+                  kind={kind}
+                  phase={phase}
+                  unit={familyUnit}
+                  oneSyllable={query.filters.syllablesMax === 1}
+                  onKind={(k) => {
+                    if (k === kind) return;
+                    startOverFamily();
+                    setFamilyKind(k);
+                  }}
+                  onToVowel={() => setBodyWantsVowel(true)}
+                  onUndo={undoFamily}
+                  onStartOver={startOverFamily}
+                  onOneSyllable={(on) =>
+                    setQuery((q) => ({ ...q, filters: { ...q.filters, syllablesMin: null, syllablesMax: on ? 1 : defaultFilters().syllablesMax } }))
+                  }
+                />
+              ) : (
+                <Selection
+                  ds={ds}
+                  query={query}
+                  notation={notation}
+                  variant={task === 'decodable' ? 'decodable' : 'search'}
+                  heading={task === 'decodable' ? 'Sound Spellings My Students Know' : task === 'parts' ? 'Word Parts Selected' : 'Sound Spellings Selected'}
+                  activeRow={activeRow}
+                  openRows={openRows}
+                  onActivate={setActiveRow}
+                  onOpenRow={openRow}
+                  onCloseRow={closeRow}
+                  onRemove={(row, index) => setQuery((q) => removeAt(q, row, index))}
+                  onJoin={(row, index) => {
+                    const next = joinWithNext(query, row, index);
+                    setQuery(() => next);
+                    if (next[row][index]) remember(next[row][index]);
+                    say('ok', 'Combined!');
+                  }}
+                  onSplit={(row, index) => setQuery((q) => splitUnit(q, row, index))}
+                  onPosition={(row, index, p) => setQuery((q) => setPosition(q, row, index, p))}
+                  onKeepsSound={(row, index, v) => setQuery((q) => setKeepsSound(q, row, index, v))}
+                  onClearTaught={() => setQuery((q) => ({ ...q, taught: [] }))}
+                />
+              )}
+              {task !== 'family' && history.length > 0 && (
                 <div className="history" aria-label="History">
                   <div className="history-title">History</div>
                   {history.map((c, k) => (
@@ -309,22 +485,14 @@ export function App() {
               <button type="button" id="search" onClick={onSearch}>
                 Search for Words
               </button>
-              <label className="check" title="Adds an OR row (at least one of these) and a NOT row (none of these)">
-                <input type="checkbox" checked={advanced} onChange={(e) => toggleAdvanced(e.target.checked)} />
-                <b>Advanced</b>
-              </label>
-            </div>
-            <div className="search-links">
-              <label className="check" title="Show only words in which every sound spelling is one your students know">
-                <input type="checkbox" checked={query.decodable} onChange={(e) => toggleDecodable(e.target.checked)} />
-                <b>Decodable words only</b>
-              </label>
-              <button type="button" className="link small" onClick={copyLink}>
-                Copy link
-              </button>
-              <button type="button" className="link small" disabled={!anySelected} onClick={clearAll}>
-                Clear
-              </button>
+              <div className="search-links">
+                <button type="button" className="link small" onClick={copyLink}>
+                  Copy link
+                </button>
+                <button type="button" className="link small" disabled={!anySelected} onClick={clearAll}>
+                  Clear
+                </button>
+              </div>
             </div>
           </div>
 
@@ -338,9 +506,10 @@ export function App() {
               sort={sort}
               results={results}
               totalWords={ds.n}
+              emptyHint={emptyHint}
               onSort={(s) => setState((st) => ({ ...st, sort: s }))}
               onFilters={(f) => setQuery((q) => ({ ...q, filters: f }))}
-              onWordSet={(w) => setQuery((q) => ({ ...q, wordSet: w }))}
+              onWordSet={setWordSet}
               onExplore={explore}
               onExport={onExport}
             />
@@ -357,19 +526,17 @@ export function App() {
           </div>
         </div>
       ) : (
-        <>
-          <Explore
-            ds={ds}
-            stats={stats}
-            morph={morph}
-            query={query}
-            notation={notation}
-            word={state.exploreWord}
-            onWord={(w) => setState((s) => ({ ...s, exploreWord: w }))}
-            onBack={showList}
-            onFind={findFromExplore}
-          />
-        </>
+        <Explore
+          ds={ds}
+          stats={stats}
+          morph={morph}
+          query={decodableQuery}
+          notation={notation}
+          word={state.exploreWord}
+          onWord={(w) => setState((s) => ({ ...s, exploreWord: w }))}
+          onBack={showList}
+          onFind={findFromExplore}
+        />
       )}
 
       <footer>

@@ -1,4 +1,4 @@
-// The help window (the "?" beside "1 Graphemes").
+// The help window (the "?" beside step 1).
 
 import { useEffect } from 'react';
 
@@ -16,12 +16,15 @@ export function Help({ onClose }: { onClose: () => void }) {
           &#10006;
         </button>
         <h2>How to use Phinder</h2>
+        <p>The four tabs above the grids are four kinds of word list. Each tab keeps its own list.</p>
+
+        <h3>Find words</h3>
         <ol>
           <li>
             <b>Graphemes.</b> Click a letter pattern. Type in &ldquo;Search Letter Pattern&rdquo; to find others, or click &ldquo;&hellip;&rdquo; to see all of them.
           </li>
           <li>
-            <b>Phonemes.</b> Click the sound you want for that pattern. The most common sound comes first. Use &ldquo;Sound Code&rdquo; or &ldquo;IPA&rdquo; to change how sounds are written.
+            <b>Phonemes.</b> Click the sound you want for that pattern. The most common sound comes first.
           </li>
           <li>
             <b>Sound Spellings Selected.</b> Each choice appears here. Words must have all of them. Click &#10006; to remove one.
@@ -30,30 +33,48 @@ export function Help({ onClose }: { onClose: () => void }) {
             <b>Word List.</b> The list updates as you choose. Click a word to explore it.
           </li>
         </ol>
-        <h3>More ways to search</h3>
         <ul>
           <li>
-            <b>Start with a sound.</b> Above the grids, choose &ldquo;Sound&rdquo; to pick a sound first and then one of its spellings. Choose &ldquo;Word part&rdquo; for prefixes and suffixes.
+            <b>Start with a sound.</b> Choose &ldquo;Sound&rdquo; beside &ldquo;Start with&rdquo; to pick a sound first and then one of its spellings.
           </li>
           <li>
-            <b>Join sound spellings.</b> Click &ldquo;+&rdquo; under AND to join two neighbours into one unit that must appear together, such as a-e + k = ake.
+            <b>Or, and not.</b> Under your selection, &ldquo;+ or one of these&rdquo; adds a row of alternatives, and &ldquo;+ but none of these&rdquo; adds a row of sound spellings to
+            leave out. Click a row to add to it.
           </li>
           <li>
-            <b>Start, middle or end of the word.</b> Click a selected sound spelling to say where it must be. A rime such as &ldquo;ake&rdquo; at the end of the word gives a word family.
+            <b>Join.</b> Click &ldquo;+&rdquo; under AND to join two neighbours into one unit that must appear together, such as a-e + k = ake.
           </li>
           <li>
-            <b>Advanced.</b> Adds an OR row (at least one of these) and a NOT row (none of these). Click a row to add to it.
+            <b>Place in the word.</b> Click a selected sound spelling to say where it must be: start, middle or end.
           </li>
-          <li>
-            <b>Decodable words only.</b> Adds a KNOWN row. Put the sound spellings your students know there. The list then shows only words in which every sound spelling is known.
-            For example, with a, i, m, n, p, s and t in the KNOWN row, the list has &ldquo;map,&rdquo; &ldquo;pin&rdquo; and &ldquo;spit,&rdquo; and not &ldquo;ship.&rdquo;
-          </li>
+        </ul>
+
+        <h3>Word family</h3>
+        <p>
+          Choose a vowel spelling and its sound, then the letters after it. For example, a-e and then k lists &ldquo;make,&rdquo; &ldquo;take&rdquo; and &ldquo;lake.&rdquo; Choose
+          &ldquo;begin the same&rdquo; to list words such as &ldquo;cat,&rdquo; &ldquo;can&rdquo; and &ldquo;cap.&rdquo;
+        </p>
+
+        <h3>Decodable list</h3>
+        <p>
+          Choose the sound spellings your students know: click a letter, then its sound. The list shows only words in which every sound spelling is known. For example, with a, i, m,
+          n, p, s and t the list has &ldquo;map,&rdquo; &ldquo;pin&rdquo; and &ldquo;spit,&rdquo; and not &ldquo;ship.&rdquo;
+        </p>
+
+        <h3>Word parts</h3>
+        <p>Choose a prefix or a suffix. Word parts are found by rule, so check the list before you use it.</p>
+
+        <h3>For every list</h3>
+        <ul>
           <li>
             <b>Options.</b> Limit syllables, letters and frequency, or use only words that have a frequency value.
           </li>
           <li>
-            <b>Save or share.</b> &ldquo;Copy link&rdquo; copies an address that reopens this exact search. Under the list you can copy the words, get a spreadsheet file, or print a list or
-            word cards.
+            <b>Sound Code or IPA.</b> Changes how sounds are written.
+          </li>
+          <li>
+            <b>Save or share.</b> &ldquo;Copy link&rdquo; copies an address that reopens this exact list. Under the list you can copy the words, get a spreadsheet file, or print a list
+            or word cards.
           </li>
         </ul>
       </div>

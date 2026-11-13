@@ -23,6 +23,8 @@ interface Props {
   /** Sorted matches (word indexes), before "Filter Words" is applied. */
   results: number[];
   totalWords: number;
+  /** What to say when nothing has been chosen yet. */
+  emptyHint: string;
   onSort: (s: SortKey) => void;
   onFilters: (f: Filters) => void;
   onWordSet: (s: Query['wordSet']) => void;
@@ -153,7 +155,7 @@ export function WordList(props: Props) {
               {visible.length === 0 && (
                 <div className="list-empty">
                   {!searching
-                    ? 'Choose a grapheme, then a phoneme, to make a word list.'
+                    ? props.emptyHint
                     : text.trim()
                       ? 'No words in the list have those letters.'
                       : 'No results found'}

@@ -25,8 +25,8 @@ interface Props {
   word: string;
   onWord: (w: string) => void;
   onBack: () => void;
-  /** Start a new search in the word list. */
-  onFind: (criteria: Criterion[], oneSyllable?: boolean) => void;
+  /** Start a new search in the word list. `family` opens it on the "Word family" tab. */
+  onFind: (criteria: Criterion[], family?: boolean) => void;
 }
 
 // One hue, light to dark: darker means more consistent. Label ink is chosen per step for contrast.
@@ -101,7 +101,7 @@ export function Explore({ ds, stats, morph, query, notation, word, onWord, onBac
   const consistency = (g: Gpc, d: Direction) =>
     d === 'reading' ? readingConsistency(ds, stats, g.id, weight) : spellingConsistency(ds, stats, g.id, weight);
   const values = gpcs.map((g) => consistency(g, direction));
-  const known = query.decodable ? allowedGpcs(query) : null;
+  const known = query.decodable && query.taught.length > 0 ? allowedGpcs(query) : null;
   const unknown = known ? gpcs.filter((g) => !known.has(g.id)) : [];
   const finite = values.filter((v) => !Number.isNaN(v));
   const mean = finite.length ? finite.reduce((a, b) => a + b, 0) / finite.length : NaN;
@@ -277,7 +277,7 @@ export function Explore({ ds, stats, morph, query, notation, word, onWord, onBac
               <p className="explore-note decod">
                 <b>Decodability. </b>
                 {known === null
-                  ? 'To check this word against the sound spellings your students know, turn on “Decodable words only” on the word list screen and fill the KNOWN row.'
+                  ? 'To check this word against the sound spellings your students know, fill the list on the \u201CDecodable list\u201D tab of the word list screen.'
                   : unknown.length === 0
                     ? `Every sound spelling in this word is on your list (${gpcs.length} of ${gpcs.length}).`
                     : `${gpcs.length - unknown.length} of ${gpcs.length} sound spellings are on your list. Not on your list: ${[...new Set(unknown.map((g) => gpcLabel(g, notation)))].join(', ')}.`}

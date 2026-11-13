@@ -1,24 +1,37 @@
-// Step 3: the sound spellings selected, in rows.
-//   Row 1 (always):  every item must be in the word (AND). "+" joins two
-//                    neighbours into one unit, such as the rime "ake".
-//   OR row:          at least one item must be in the word.     (Advanced)
-//   NOT row:         none of the items may be in the word.      (Advanced)
-//   KNOWN row:       the sound spellings students know.         (Decodable words only)
+// Step 3: what has been selected, in rows.
+//
+// "search" (tabs Find words and Word parts):
+//   main row:  every item must be in the word (AND). "+" joins two neighbours
+//              into one unit, such as "ake".
+//   OR row:    at least one item must be in the word.   (added with a button)
+//   NOT row:   none of the items may be in the word.    (added with a button)
+// "decodable" (tab Decodable list):
+//   main row:  the sound spellings students know.
+//   MUST HAVE: sound spellings every word must contain. (added with a button)
+//
 // Clicking a row makes it the row that the grids add to.
 
-import { Fragment, useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { gpcLabel, type Dataset } from '../lib/dataset';
 import { criterionLabel, criterionTags, type Row } from '../lib/edit';
 import type { Notation } from '../lib/phonemeMeta';
 import type { Criterion, GroupName, Position, Query } from '../lib/query';
 
+export type SelectionVariant = 'search' | 'decodable';
+
 interface Props {
   ds: Dataset;
   query: Query;
   notation: Notation;
+  variant: SelectionVariant;
+  heading: string;
   activeRow: Row;
-  advanced: boolean;
+  /** Optional rows that are showing. A row that holds something always shows. */
+  openRows: Row[];
   onActivate: (row: Row) => void;
+  onOpenRow: (row: Row) => void;
+  /** Empties an optional row and hides it. */
+  onCloseRow: (row: Row) => void;
   onRemove: (row: Row, index: number) => void;
   onJoin: (row: GroupName, index: number) => void;
   onSplit: (row: GroupName, index: number) => void;
@@ -27,13 +40,31 @@ interface Props {
   onClearTaught: () => void;
 }
 
-const ROW_LABEL: Record<Row, string> = { all: '', any: 'OR', none: 'NOT', taught: 'KNOWN' };
-const ROW_HINT: Record<Row, string> = {
-  all: 'Words must have every sound spelling in this row.',
-  any: 'Words must have at least one sound spelling in this row.',
-  none: 'Words must not have any sound spelling in this row.',
-  taught: 'The sound spellings your students know. Words may use only these and the ones in the rows above.',
+interface RowText {
+  label: string;
+  hint: string;
+  add: string;
+  empty: string;
+}
+
+const TEXT: Record<SelectionVariant, Partial<Record<Row, RowText>>> = {
+  search: {
+    all: { label: '', hint: 'Words must have every item in this row.', add: '', empty: 'Choose a sound spelling above.' },
+    any: { label: 'OR', hint: 'Words must have at least one item in this row.', add: '+ or one of these', empty: 'Choose one or more above.' },
+    none: { label: 'NOT', hint: 'Words must not have any item in this row.', add: '+ but none of these', empty: 'Choose one or more above.' },
+  },
+  decodable: {
+    taught: {
+      label: '',
+      hint: 'The sound spellings your students know. The list shows only words made from these.',
+      add: '',
+      empty: 'Choose the sound spellings your students know. Click a letter, then its sound.',
+    },
+    all: { label: 'MUST HAVE', hint: 'Every word in the list must also contain these.', add: '+ words must also have', empty: 'Choose one or more above.' },
+  },
 };
+
+const ORDER: Record<SelectionVariant, Row[]> = { search: ['all', 'any', 'none'], decodable: ['taught', 'all'] };
 
 const POSITIONS: [Position, string][] = [
   ['any', 'Anywhere in the word'],
@@ -43,9 +74,8 @@ const POSITIONS: [Position, string][] = [
 ];
 
 export function Selection(props: Props) {
-  const { ds, query, notation, activeRow, advanced } = props;
+  const { ds, query, notation, variant, activeRow } = props;
   const [menu, setMenu] = useState<{ row: GroupName; index: number } | null>(null);
-  const root = useRef<HTMLDivElement>(null);
 
   // Close the chip menu on a click elsewhere or on Escape.
   useEffect(() => {
@@ -62,7 +92,10 @@ export function Selection(props: Props) {
     };
   }, [menu]);
 
-  const rows: Row[] = ['all', ...(advanced ? (['any', 'none'] as Row[]) : []), ...(query.decodable ? (['taught'] as Row[]) : [])];
+  const main = ORDER[variant][0];
+  const count = (row: Row) => (row === 'taught' ? query.taught.length : query[row].length);
+  const rows = ORDER[variant].filter((row) => row === main || props.openRows.includes(row) || count(row) > 0);
+  const addable = ORDER[variant].filter((row) => !rows.includes(row));
   const multipleRows = rows.length > 1;
 
   const chip = (row: GroupName, c: Criterion, index: number) => {
@@ -166,22 +199,37 @@ export function Selection(props: Props) {
   };
 
   return (
-    <div className="selection" ref={root}>
+    <div className="selection">
       <h2 className="heading">
-        <span className="num">3</span>Sound Spellings Selected
+        <span className="num">3</span>
+        {props.heading}
       </h2>
       {rows.map((row) => {
+        const text = TEXT[variant][row]!;
         const active = activeRow === row;
         const dim = multipleRows && !active;
-        const items = row === 'taught' ? [] : query[row];
         return (
-          <div
-            key={row}
-            className={`sel-row${dim ? ' dim' : ''}${multipleRows && active ? ' active' : ''}`}
-            title={ROW_HINT[row]}
-            onClick={() => props.onActivate(row)}
-          >
-            {row !== 'all' && <div className="row-label">{ROW_LABEL[row]}</div>}
+          <div key={row} className={`sel-row${dim ? ' dim' : ''}${multipleRows && active ? ' active' : ''}`} title={text.hint} onClick={() => props.onActivate(row)}>
+            {text.label && (
+              <div className="row-label">
+                {text.label}
+                {row !== main && (
+                  <button
+                    type="button"
+                    className="row-close"
+                    aria-label={`Remove the ${text.label} row`}
+                    title="Remove this row"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setMenu(null);
+                      props.onCloseRow(row);
+                    }}
+                  >
+                    &#10006;
+                  </button>
+                )}
+              </div>
+            )}
             <div className="row-items">
               {row === 'taught' ? (
                 <>
@@ -201,9 +249,7 @@ export function Selection(props: Props) {
                       </button>
                     </div>
                   ))}
-                  {query.taught.length === 0 && (
-                    <span className="row-empty">{active ? 'Choose the sound spellings your students know.' : 'Click here, then choose the sound spellings your students know.'}</span>
-                  )}
+                  {query.taught.length === 0 && <span className="row-empty">{text.empty}</span>}
                   {query.taught.length > 1 && (
                     <button
                       type="button"
@@ -219,12 +265,12 @@ export function Selection(props: Props) {
                 </>
               ) : (
                 <>
-                  {items.map((c, index) => (
+                  {query[row].map((c, index, items) => (
                     <Fragment key={index}>
                       {chip(row, c, index)}
                       {index + 1 < items.length && (
                         <div className="joiner">
-                          <div className="and">{row === 'all' ? 'AND' : 'OR'}</div>
+                          <div className="and">{row === 'any' ? 'OR' : row === 'none' ? 'OR' : 'AND'}</div>
                           {c.type === 'unit' && items[index + 1].type === 'unit' ? (
                             <button
                               type="button"
@@ -246,8 +292,8 @@ export function Selection(props: Props) {
                       )}
                     </Fragment>
                   ))}
-                  {items.length === 0 && multipleRows && (
-                    <span className="row-empty">{active ? 'Choose a sound spelling above.' : 'Click here to add to this row.'}</span>
+                  {query[row].length === 0 && (multipleRows || row !== 'all') && (
+                    <span className="row-empty">{active ? text.empty : 'Click here to add to this row.'}</span>
                   )}
                 </>
               )}
@@ -255,6 +301,15 @@ export function Selection(props: Props) {
           </div>
         );
       })}
+      {addable.length > 0 && count(main) > 0 && (
+        <div className="row-adds">
+          {addable.map((row) => (
+            <button key={row} type="button" className="link small" title={TEXT[variant][row]!.hint} onClick={() => props.onOpenRow(row)}>
+              {TEXT[variant][row]!.add}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
