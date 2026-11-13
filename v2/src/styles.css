@@ -15,8 +15,8 @@
   /* TRIAL (Nov 13, 2026): the text people read (list words, labels, links) uses
      the darker green and regular weight, for contrast. To go back to the old
      look, set --ink to var(--green) and --ink-font to dinLight. */
-  --ink: var(--green-deep);
-  --ink-hover: #124b2e;
+  --ink: #238d57; /* a green from the first version (its search icon); Devin found #1d7447 too dark */
+  --ink-hover: var(--green-deep);
   --ink-font: din;
   --panel: #f6f1f1;
   --panel-2: #f8f3f3;
