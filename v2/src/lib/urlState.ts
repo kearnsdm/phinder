@@ -3,7 +3,7 @@
 // ("ea_i"), not by number, so links keep working when the word data changes.
 //
 // Position flags: :s start, :m middle, :e end.
-// "tab" names the tab of the word-list screen (family, decodable, parts).
+// "tab" names the page of the word-list screen (sound, decodable, advanced).
 // Example: #all=ea_i,a-e_e+k_k:e&dec=1&taught=m_m,a_a&syl=1-2&sort=alpha-asc
 
 import type { Dataset } from './dataset';
@@ -21,12 +21,11 @@ import {
 
 export type View = 'find' | 'explore';
 
-/**
- * The tab of the word-list screen. "find" and "parts" are two ways into the
- * same search; "family" and "decodable" each keep a search of their own.
- */
-export type Task = 'find' | 'parts' | 'family' | 'decodable';
-const TASKS: Task[] = ['find', 'parts', 'family', 'decodable'];
+/** The page of the word-list screen. Each page keeps a search of its own. */
+export type Task = 'find' | 'sound' | 'decodable' | 'advanced';
+const TASKS: Task[] = ['find', 'sound', 'decodable', 'advanced'];
+/** Page names used by earlier trial builds. */
+const OLD_TASKS: Record<string, Task> = { family: 'advanced', parts: 'find' };
 
 export interface AppState {
   view: View;
@@ -102,6 +101,7 @@ export function encodeState(ds: Dataset, state: AppState): string {
   for (const group of ['all', 'any', 'none'] as const) {
     add(group, q[group].map((c) => encodeCriterion(ds, c)).join(','));
   }
+  if (q.shape) add('shape', q.shape);
   if (q.decodable) add('dec', '1');
   add('taught', q.taught.map((id) => enc(ds.gpcs[id].key)).join(','));
   if (q.wordSet !== 'all') add('set', q.wordSet);
@@ -131,8 +131,9 @@ export function decodeState(ds: Dataset, hash: string): AppState {
   };
 
   if (params.get('view') === 'explore') state.view = 'explore';
-  const tab = params.get('tab') as Task | undefined;
-  if (tab && TASKS.includes(tab)) state.task = tab;
+  const tab = params.get('tab') ?? '';
+  if (TASKS.includes(tab as Task)) state.task = tab as Task;
+  else if (OLD_TASKS[tab]) state.task = OLD_TASKS[tab];
   state.exploreWord = safe(() => decodeURIComponent(params.get('word') ?? ''), '');
 
   const q = state.query;
@@ -144,6 +145,8 @@ export function decodeState(ds: Dataset, hash: string): AppState {
       .map((c) => safe(() => decodeCriterion(ds, c), null))
       .filter((c): c is Criterion => c !== null);
   }
+  const shape = params.get('shape') ?? '';
+  if (/^[CVe]{1,12}$/.test(shape)) q.shape = shape;
   q.decodable = params.get('dec') === '1' || state.task === 'decodable';
   const taught = params.get('taught');
   if (taught) {

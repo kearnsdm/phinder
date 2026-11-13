@@ -2,13 +2,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import config from '../pack.config.json';
 import trial from '../trial.json';
 import { Explore } from './components/Explore';
-import { FamilyBox, type FamilyKind, type FamilyPhase } from './components/FamilyBox';
 import { Help } from './components/Help';
 import { Picker, type PickerMode } from './components/Picker';
 import { PrintSheet, type PrintMode } from './components/PrintSheet';
 import { Selection } from './components/Selection';
 import { WordList } from './components/WordList';
-import { gpcsOf, inlineAssets, loadDataset, type Dataset, type Gpc } from './lib/dataset';
+import { inlineAssets, loadDataset, type Dataset } from './lib/dataset';
 import {
   addAffix,
   addCriterion,
@@ -24,10 +23,9 @@ import {
 } from './lib/edit';
 import { resultsToCsv, resultsToText } from './lib/export';
 import { Morph } from './lib/morph';
-import { defaultFilters, emptyQuery, hasCriteria, type Criterion, type Query, type UnitCriterion } from './lib/query';
+import { defaultFilters, emptyQuery, hasCriteria, SHAPES, type Criterion, type Query } from './lib/query';
 import { search, sortResults } from './lib/search';
 import { computeStats } from './lib/stats';
-import { bodyRime } from './lib/units';
 import { decodeState, defaultState, encodeState, type AppState, type Task } from './lib/urlState';
 
 type Alert = { kind: 'ok' | 'bad'; text: string; id: number };
@@ -35,29 +33,29 @@ type Alert = { kind: 'ok' | 'bad'; text: string; id: number };
 const LOGO = inlineAssets().logo ?? `${import.meta.env.BASE_URL}logo.png`;
 const SITE = 'https://www.devinkearns.com/';
 
-const TABS: [Task, string][] = [
+/**
+ * The pages of the word-list screen, in the order of the top line.
+ *   find:      the first Phinder's screen (spelling to sound), plus word parts
+ *   sound:     the same steps the other way round (sound to spelling)
+ *   decodable: words made only from the sound spellings students know
+ *   advanced:  every other way to select words
+ * Each page keeps a search of its own.
+ */
+const PAGES: [Task, string][] = [
   ['find', 'Find Words'],
-  ['family', 'Word Family'],
+  ['sound', 'Sound to Spelling'],
   ['decodable', 'Decodable List'],
-  ['parts', 'Word Parts'],
+  ['advanced', 'Advanced'],
 ];
 
-/**
- * Each tab works on a search. "Find words" and "Word parts" are two ways into
- * the same search; "Word family" and "Decodable list" each keep their own.
- */
-type Slot = 'search' | 'family' | 'decodable';
-const slotOf = (task: Task): Slot => (task === 'family' ? 'family' : task === 'decodable' ? 'decodable' : 'search');
-
-const startQueries = (): Record<Slot, Query> => ({
-  search: { ...emptyQuery(), filters: defaultFilters() },
-  family: { ...emptyQuery(), filters: { ...defaultFilters(), syllablesMax: 1 } },
+const startQueries = (): Record<Task, Query> => ({
+  find: { ...emptyQuery(), filters: defaultFilters() },
+  sound: { ...emptyQuery(), filters: defaultFilters() },
   decodable: { ...emptyQuery(), filters: defaultFilters(), decodable: true },
+  advanced: { ...emptyQuery(), filters: defaultFilters() },
 });
 
 const LETTERS = 'abcdefghijklmnopqrstuvwxyz'.split('');
-const isVowelGpc = (g: Gpc) => g.phoneme.struct === 'V' || g.phoneme.struct === 'VC' || g.phoneme.struct === 'CV';
-const isConsonantGpc = (g: Gpc) => !isVowelGpc(g); // consonants and silent letters
 
 async function copyText(text: string): Promise<boolean> {
   try {
@@ -90,13 +88,11 @@ export function App() {
   const [ds, setDs] = useState<Dataset | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [state, setState] = useState<AppState>(defaultState);
-  /** The searches of the tabs that are not showing. */
-  const stash = useRef<Record<Slot, Query>>(startQueries());
+  /** The searches of the pages that are not showing. */
+  const stash = useRef<Record<Task, Query>>(startQueries());
   const [activeRow, setActiveRow] = useState<Row>('all');
   const [openRows, setOpenRows] = useState<Row[]>([]);
-  const [findMode, setFindMode] = useState<PickerMode>('spelling');
-  const [familyKind, setFamilyKind] = useState<FamilyKind>('rime');
-  const [bodyWantsVowel, setBodyWantsVowel] = useState(false);
+  const [advancedMode, setAdvancedMode] = useState<PickerMode>('spelling');
   const [help, setHelp] = useState(false);
   const [alert, setAlert] = useState<Alert | null>(null);
   const [history, setHistory] = useState<Criterion[]>([]);
@@ -178,36 +174,6 @@ export function App() {
   const stats = useMemo(() => (ds ? computeStats(ds, query.wordSet) : null), [ds, query.wordSet]);
   const results = useMemo(() => (ds && morph ? sortResults(ds, search(ds, query, morph), sort) : []), [ds, morph, query, sort]);
 
-  // Graphemes for the "Word family" tab: vowel spellings, and the letters before and after them.
-  // The first screen of each grid holds the 15 used most in that place in one-syllable words.
-  const familyLists = useMemo(() => {
-    if (!ds || !stats) return null;
-    const onset = new Map<string, number>();
-    const nucleus = new Map<string, number>();
-    const coda = new Map<string, number>();
-    const bump = (m: Map<string, number>, grapheme: string) => m.set(grapheme, (m.get(grapheme) ?? 0) + 1);
-    for (let i = 0; i < ds.n; i++) {
-      if (ds.syllables[i] !== 1) continue;
-      const parts = bodyRime(gpcsOf(ds, ds.seq[i]));
-      if (!parts) continue;
-      parts.onset.forEach((g) => bump(onset, g.grapheme));
-      bump(nucleus, parts.nucleus.grapheme);
-      parts.coda.forEach((g) => bump(coda, g.grapheme));
-    }
-    const make = (want: (g: Gpc) => boolean, rank: Map<string, number>) => {
-      const offered = new Set<string>();
-      for (const [grapheme, total] of stats.byGrapheme) {
-        if (total.gpcs.some((id) => want(ds.gpcs[id]))) offered.add(grapheme);
-      }
-      const short = [...offered]
-        .filter((g) => rank.has(g))
-        .sort((a, b) => rank.get(b)! - rank.get(a)!)
-        .slice(0, 15);
-      return { filter: (grapheme: string) => offered.has(grapheme), short, want };
-    };
-    return { vowel: make(isVowelGpc, nucleus), ending: make(isConsonantGpc, coda), beginning: make(isConsonantGpc, onset) };
-  }, [ds, stats]);
-
   const setQuery = useCallback((fn: (q: Query) => Query) => setState((s) => ({ ...s, query: fn(s.query) })), []);
   const remember = (c: Criterion) =>
     setHistory((h) => [c, ...h.filter((x) => JSON.stringify(x) !== JSON.stringify(c))].slice(0, 8));
@@ -219,7 +185,7 @@ export function App() {
       </div>
     );
   }
-  if (!ds || !morph || !stats || !familyLists) {
+  if (!ds || !morph || !stats) {
     return (
       <div className="container">
         <img className="logo" src={LOGO} alt="Phinder" width={106} height={65} />
@@ -228,52 +194,22 @@ export function App() {
     );
   }
 
-  // ---- tabs ----
-  /** Shows a tab. `withQuery` replaces that tab's search (used by Explore a Word). */
-  const openTab = (next: Task, withQuery?: Query) => {
+  // ---- pages ----
+  /** Shows a page. `withQuery` replaces that page's search (used by Explore a Word). */
+  const openPage = (next: Task, withQuery?: Query) => {
     if (!withQuery && next === task && state.view === 'find') return;
-    const from = slotOf(task);
-    const to = slotOf(next);
-    if (from !== to) stash.current[from] = query;
-    const nextQuery = withQuery ?? (from === to ? query : stash.current[to]);
+    if (next !== task) stash.current[task] = query;
+    const nextQuery = withQuery ?? (next === task ? query : stash.current[next]);
     setState((s) => ({ ...s, view: 'find', task: next, query: nextQuery }));
-    setActiveRow(to === 'decodable' ? 'taught' : 'all');
+    setActiveRow(next === 'decodable' ? 'taught' : 'all');
     setOpenRows([]);
   };
-  /** The search of the "Decodable list" tab, wherever the person is now. */
-  const decodableQuery = slotOf(task) === 'decodable' ? query : stash.current.decodable;
+  /** The search of the "Decodable List" page, wherever the person is now. */
+  const decodableQuery = task === 'decodable' ? query : stash.current.decodable;
+  const advanced = task === 'advanced';
 
-  // ---- word family ----
-  const familyUnit: UnitCriterion | null = task === 'family' && query.all[0]?.type === 'unit' ? query.all[0] : null;
-  const kind: FamilyKind = familyUnit ? (familyUnit.position === 'start' ? 'body' : 'rime') : familyKind;
-  const familyHasVowel = !!familyUnit && familyUnit.gpcs.some((id) => isVowelGpc(ds.gpcs[id]));
-  const phase: FamilyPhase =
-    kind === 'rime' ? (familyUnit ? 'ending' : 'vowel') : familyHasVowel ? 'done' : bodyWantsVowel ? 'vowel' : 'beginning';
-  const pickFamily = (id: number) => {
-    setQuery((q) => {
-      const unit = q.all[0]?.type === 'unit' ? q.all[0] : null;
-      const next: UnitCriterion = unit
-        ? { ...unit, gpcs: [...unit.gpcs, id] }
-        : { type: 'unit', gpcs: [id], position: kind === 'rime' ? 'end' : 'start' };
-      return { ...q, all: [next] };
-    });
-    setBodyWantsVowel(false);
-  };
-  const undoFamily = () =>
-    setQuery((q) => {
-      const unit = q.all[0]?.type === 'unit' ? q.all[0] : null;
-      if (!unit || unit.gpcs.length <= 1) return { ...q, all: [] };
-      return { ...q, all: [{ ...unit, gpcs: unit.gpcs.slice(0, -1) }] };
-    });
-  const startOverFamily = () => {
-    setQuery((q) => ({ ...q, all: [] }));
-    setBodyWantsVowel(false);
-  };
-  const familyGraphemes = phase === 'vowel' ? familyLists.vowel : phase === 'ending' ? familyLists.ending : familyLists.beginning;
-
-  // ---- choices from the grids ----
+  // ---- choices from the grids and menus ----
   const pickGpc = (id: number) => {
-    if (task === 'family') return pickFamily(id);
     setQuery((q) => addGpc(q, activeRow, id));
     remember({ type: 'unit', gpcs: [id], position: 'any' });
   };
@@ -295,30 +231,20 @@ export function App() {
   };
 
   const onSearch = () => {
-    if (!hasCriteria(query)) {
-      say(
-        'bad',
-        task === 'decodable'
-          ? 'Choose the sound spellings your students know'
-          : task === 'family'
-            ? 'Choose a vowel spelling and an ending'
-            : task === 'parts'
-              ? 'Select a prefix or a suffix'
-              : 'Select one or more phonemes',
-      );
-    } else if (results.length === 0) say('bad', 'No results found');
+    if (!hasCriteria(query)) say('bad', task === 'decodable' ? 'Choose the sound spellings your students know' : 'Select one or more phonemes');
+    else if (results.length === 0) say('bad', 'No results found');
     else say('ok', 'Done!');
     if (window.innerWidth < 900) document.querySelector('.wordlist')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  const onExport = async (kindOfExport: 'copy' | 'csv' | 'print-list' | 'print-cards', indexes: number[]) => {
-    if (kindOfExport === 'copy') {
+  const onExport = async (kind: 'copy' | 'csv' | 'print-list' | 'print-cards', indexes: number[]) => {
+    if (kind === 'copy') {
       const ok = await copyText(resultsToText(ds, indexes));
       say(ok ? 'ok' : 'bad', ok ? `Copied ${indexes.length.toLocaleString()} words` : 'The words could not be copied');
-    } else if (kindOfExport === 'csv') {
+    } else if (kind === 'csv') {
       download('phinder-word-list.csv', resultsToCsv(ds, indexes, notation), 'text/csv;charset=utf-8');
     } else {
-      setPrint({ mode: kindOfExport === 'print-list' ? 'list' : 'cards', indexes });
+      setPrint({ mode: kind === 'print-list' ? 'list' : 'cards', indexes });
     }
   };
 
@@ -328,34 +254,34 @@ export function App() {
   };
 
   const clearAll = () => {
-    setQuery((q) => ({ ...q, all: [], any: [], none: [] }));
+    setQuery((q) => ({ ...q, all: [], any: [], none: [], shape: null }));
     setOpenRows([]);
-    setBodyWantsVowel(false);
     setActiveRow(task === 'decodable' ? 'taught' : 'all');
   };
 
   const setWordSet = (wordSet: Query['wordSet']) => {
-    // One choice for every tab.
-    for (const slot of Object.keys(stash.current) as Slot[]) stash.current[slot] = { ...stash.current[slot], wordSet };
+    // One choice for every page.
+    for (const page of Object.keys(stash.current) as Task[]) stash.current[page] = { ...stash.current[page], wordSet };
     setQuery((q) => ({ ...q, wordSet }));
   };
 
   const explore = (word: string) => setState((s) => ({ ...s, view: 'explore', exploreWord: word }));
   const showList = () => setState((s) => ({ ...s, view: 'find' }));
-  const findFromExplore = (criteria: Criterion[], family?: boolean) => {
-    const base = startQueries()[family ? 'family' : 'search'];
-    openTab(family ? 'family' : criteria.some((c) => c.type === 'affix') ? 'parts' : 'find', { ...base, wordSet: query.wordSet, all: criteria });
+  /** From Explore a Word. A joined unit (a body or a rime) needs the Advanced page. */
+  const findFromExplore = (criteria: Criterion[], oneSyllable?: boolean) => {
+    const needsAdvanced = criteria.some((c) => c.type === 'unit' && (c.gpcs.length > 1 || c.position !== 'any'));
+    const page: Task = needsAdvanced ? 'advanced' : 'find';
+    const filters = oneSyllable ? { ...defaultFilters(), syllablesMax: 1 } : defaultFilters();
+    openPage(page, { ...startQueries()[page], wordSet: query.wordSet, all: criteria, filters });
   };
 
-  const anySelected = query.all.length + query.any.length + query.none.length > 0;
+  const anySelected = query.all.length + query.any.length + query.none.length > 0 || query.shape !== null;
   const emptyHint =
-    task === 'family'
-      ? 'Choose a vowel spelling and an ending to list a word family.'
-      : task === 'decodable'
-        ? 'Choose the sound spellings your students know to list the words they can read.'
-        : task === 'parts'
-          ? 'Choose a prefix or a suffix to make a word list.'
-          : 'Choose a grapheme, then a phoneme, to make a word list.';
+    task === 'decodable'
+      ? 'Choose the sound spellings your students know to list the words they can read.'
+      : task === 'sound'
+        ? 'Choose a phoneme, then a grapheme, to make a word list.'
+        : 'Choose a grapheme, then a phoneme, to make a word list.';
 
   return (
     <div className="container">
@@ -366,12 +292,12 @@ export function App() {
             by Devin Kearns, Ph.D.
           </a>
         </div>
-        {/* The top line: four kinds of word list, and the single-word screen. */}
-        <nav className="views" aria-label="Kinds of word list">
-          {TABS.map(([t, label]) => {
+        {/* The top line: the pages of the word-list screen, and the single-word screen. */}
+        <nav className="views" aria-label="Pages">
+          {PAGES.map(([t, label]) => {
             const on = state.view === 'find' && task === t;
             return (
-              <button key={t} type="button" className={on ? 'link on' : 'link'} aria-current={on ? 'page' : undefined} onClick={() => openTab(t)}>
+              <button key={t} type="button" className={on ? 'link on' : 'link'} aria-current={on ? 'page' : undefined} onClick={() => openPage(t)}>
                 {label}
               </button>
             );
@@ -390,91 +316,67 @@ export function App() {
       {state.view === 'find' ? (
         <div className="main">
           <div className="left">
-            {task === 'family' ? (
-              <Picker
-                key={`family-${kind}-${phase}`}
-                ds={ds}
-                stats={stats}
-                notation={notation}
-                mode="spelling"
-                modes={[]}
-                onMode={() => {}}
-                onNotation={(n) => setState((s) => ({ ...s, notation: n }))}
-                onPickGpc={pickGpc}
-                onPickAffix={pickAffix}
-                onHelp={() => setHelp(true)}
-                shortList={familyGraphemes.short}
-                graphemeFilter={familyGraphemes.filter}
-                gpcFilter={familyGraphemes.want}
-                heading1={phase === 'vowel' ? 'Vowel Spelling' : phase === 'ending' ? 'Ending Letters' : 'Beginning Letters'}
-                heading2="Sound"
-                searchPlaceholder="Search Letters"
-                closedNote={phase === 'done' ? 'This beginning is complete. Click “start over” below to make another.' : undefined}
-              />
-            ) : (
-              <Picker
-                key={task}
-                ds={ds}
-                stats={stats}
-                notation={notation}
-                mode={task === 'parts' ? 'part' : findMode}
-                modes={task === 'parts' ? [] : ['spelling', 'sound']}
-                onMode={setFindMode}
-                onNotation={(n) => setState((s) => ({ ...s, notation: n }))}
-                onPickGpc={pickGpc}
-                onPickAffix={pickAffix}
-                onHelp={() => setHelp(true)}
-                shortList={task === 'decodable' ? LETTERS : undefined}
-              />
-            )}
+            <Picker
+              key={task}
+              ds={ds}
+              stats={stats}
+              notation={notation}
+              mode={task === 'sound' ? 'sound' : advanced ? advancedMode : 'spelling'}
+              modes={advanced ? ['spelling', 'sound'] : [task === 'sound' ? 'sound' : 'spelling']}
+              onMode={setAdvancedMode}
+              onNotation={(n) => setState((s) => ({ ...s, notation: n }))}
+              onPickGpc={pickGpc}
+              onPickAffix={task === 'find' || advanced ? pickAffix : undefined}
+              onHelp={() => setHelp(true)}
+              shortList={task === 'decodable' ? LETTERS : undefined}
+            />
 
             <div className="selection-wrap">
-              {task === 'family' ? (
-                <FamilyBox
-                  ds={ds}
-                  notation={notation}
-                  kind={kind}
-                  phase={phase}
-                  unit={familyUnit}
-                  oneSyllable={query.filters.syllablesMax === 1}
-                  onKind={(k) => {
-                    if (k === kind) return;
-                    startOverFamily();
-                    setFamilyKind(k);
-                  }}
-                  onToVowel={() => setBodyWantsVowel(true)}
-                  onUndo={undoFamily}
-                  onStartOver={startOverFamily}
-                  onOneSyllable={(on) =>
-                    setQuery((q) => ({ ...q, filters: { ...q.filters, syllablesMin: null, syllablesMax: on ? 1 : defaultFilters().syllablesMax } }))
-                  }
-                />
-              ) : (
-                <Selection
-                  ds={ds}
-                  query={query}
-                  notation={notation}
-                  variant={task === 'decodable' ? 'decodable' : 'search'}
-                  heading={task === 'decodable' ? 'Sound Spellings My Students Know' : task === 'parts' ? 'Word Parts Selected' : 'Sound Spellings Selected'}
-                  activeRow={activeRow}
-                  openRows={openRows}
-                  onActivate={setActiveRow}
-                  onOpenRow={openRow}
-                  onCloseRow={closeRow}
-                  onRemove={(row, index) => setQuery((q) => removeAt(q, row, index))}
-                  onJoin={(row, index) => {
-                    const next = joinWithNext(query, row, index);
-                    setQuery(() => next);
-                    if (next[row][index]) remember(next[row][index]);
-                    say('ok', 'Combined!');
-                  }}
-                  onSplit={(row, index) => setQuery((q) => splitUnit(q, row, index))}
-                  onPosition={(row, index, p) => setQuery((q) => setPosition(q, row, index, p))}
-                  onKeepsSound={(row, index, v) => setQuery((q) => setKeepsSound(q, row, index, v))}
-                  onClearTaught={() => setQuery((q) => ({ ...q, taught: [] }))}
-                />
+              <Selection
+                ds={ds}
+                query={query}
+                notation={notation}
+                variant={task === 'decodable' ? 'decodable' : 'search'}
+                heading={task === 'decodable' ? 'Sound Spellings My Students Know' : 'Sound Spellings Selected'}
+                activeRow={activeRow}
+                openRows={openRows}
+                addableRows={advanced ? ['any', 'none'] : task === 'decodable' ? ['all'] : []}
+                advanced={advanced}
+                onActivate={setActiveRow}
+                onOpenRow={openRow}
+                onCloseRow={closeRow}
+                onRemove={(row, index) => setQuery((q) => removeAt(q, row, index))}
+                onJoin={(row, index) => {
+                  const next = joinWithNext(query, row, index);
+                  setQuery(() => next);
+                  if (next[row][index]) remember(next[row][index]);
+                  say('ok', 'Combined!');
+                }}
+                onSplit={(row, index) => setQuery((q) => splitUnit(q, row, index))}
+                onPosition={(row, index, p) => setQuery((q) => setPosition(q, row, index, p))}
+                onKeepsSound={(row, index, v) => setQuery((q) => setKeepsSound(q, row, index, v))}
+                onClearTaught={() => setQuery((q) => ({ ...q, taught: [] }))}
+              />
+
+              {advanced && (
+                <div className="shape-row">
+                  <div className="shape-label" title="C = one consonant sound spelling (b, sh, ck). V = one vowel sound spelling (a, ai, ar). e = the e of a split digraph (make).">
+                    Word shape
+                  </div>
+                  <div className="btn-row" role="group" aria-label="Word shape">
+                    {SHAPES.map((shape) => (
+                      <button key={shape} type="button" className={query.shape === shape ? 'on' : ''} aria-pressed={query.shape === shape} onClick={() => setQuery((q) => ({ ...q, shape: q.shape === shape ? null : shape }))}>
+                        {shape}
+                      </button>
+                    ))}
+                    <button type="button" className={query.shape === null ? 'on' : ''} aria-pressed={query.shape === null} onClick={() => setQuery((q) => ({ ...q, shape: null }))}>
+                      Any
+                    </button>
+                  </div>
+                </div>
               )}
-              {task !== 'family' && history.length > 0 && (
+
+              {history.length > 0 && (
                 <div className="history" aria-label="History">
                   <div className="history-title">History</div>
                   {history.map((c, k) => (
@@ -512,7 +414,7 @@ export function App() {
               results={results}
               totalWords={ds.n}
               emptyHint={emptyHint}
-              startFilters={startQueries()[slotOf(task)].filters}
+              startFilters={defaultFilters()}
               onSort={(s) => setState((st) => ({ ...st, sort: s }))}
               onFilters={(f) => setQuery((q) => ({ ...q, filters: f }))}
               onWordSet={setWordSet}

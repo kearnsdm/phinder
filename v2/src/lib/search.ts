@@ -1,7 +1,7 @@
 // The search engine. It scans every word once and keeps the words that meet
 // the query. All matching is on whole sound spellings.
 
-import { seqOf, type Dataset } from './dataset';
+import { seqOf, wordShape, type Dataset } from './dataset';
 import type { Morph } from './morph';
 import { hasCriteria, type Criterion, type Query, type SortKey } from './query';
 
@@ -64,6 +64,8 @@ export function search(ds: Dataset, q: Query, morph: Morph | null = null): numbe
     const len = ds.letters[i];
     if (f.lettersMin !== null && len < f.lettersMin) continue;
     if (f.lettersMax !== null && len > f.lettersMax) continue;
+
+    if (q.shape !== null && wordShape(ds, i) !== q.shape) continue;
 
     const seq = ds.seq[i];
     for (const test of all) if (!test(i, seq)) continue words;

@@ -56,6 +56,8 @@ export interface Dataset {
   seq: string[];
   wordIndex: Map<string, number>;
   charBase: number;
+  /** Word shapes ("CVC"), worked out the first time each is asked for. See wordShape(). */
+  shapes: (string | undefined)[];
 }
 
 export function unpack(bytes: Uint8Array): PackedData {
@@ -130,7 +132,34 @@ export function buildDataset(packed: PackedData): Dataset {
     seq,
     wordIndex,
     charBase,
+    shapes: new Array<string | undefined>(n),
   };
+}
+
+/**
+ * The shape of a word in sound spellings:
+ *   C = one consonant sound spelling (b, sh, ck, x)
+ *   V = one vowel sound spelling (a, ai, ar)
+ *   e = the e of a split digraph (make = CVCe)
+ * Silent letters are left out (knee = CV, horse = CVC).
+ */
+export function wordShape(ds: Dataset, i: number): string {
+  const known = ds.shapes[i];
+  if (known !== undefined) return known;
+  let shape = '';
+  let pendingE = false;
+  for (const g of gpcsOf(ds, ds.seq[i])) {
+    const s = g.phoneme.struct;
+    if (s === 'S') continue;
+    shape += s === 'C' || s === 'CC' ? 'C' : 'V';
+    if (pendingE) {
+      shape += 'e';
+      pendingE = false;
+    }
+    if (g.splitVowel !== null) pendingE = true;
+  }
+  ds.shapes[i] = shape;
+  return shape;
 }
 
 /**

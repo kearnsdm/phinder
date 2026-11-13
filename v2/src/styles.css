@@ -147,14 +147,19 @@ button:disabled { cursor: default; }
   font-family: var(--ink-font); font-size: 95%; color: var(--ink); height: 24px;
 }
 .inputform::placeholder { color: var(--ink); opacity: 0.85; }
-.picker-note { font-family: dinLight; font-size: 12px; line-height: 1.25; margin: 10px 0 0; }
+/* word parts: two menus under the grids */
+.affix-row { display: flex; align-items: center; gap: 8px; margin-top: 14px; width: 358px; max-width: 100%; }
+.affix-label { font-family: var(--ink-font); font-size: 13px; margin-right: 2px; white-space: nowrap; }
+.affix-menu {
+  flex: 1; min-width: 0; height: 26px; padding: 0 4px; font: 13px din, Arial, sans-serif; color: var(--ink);
+  background: var(--panel); border: 1px solid var(--panel); border-radius: 0; cursor: pointer;
+}
+.affix-menu:hover { background: var(--hover); }
 
-/* A two-way choice drawn as text: the chosen one is underlined in green. */
-.quiet-switch { display: flex; align-items: baseline; gap: 14px; margin-bottom: 10px; }
-.quiet-switch .mode-label { margin-right: 0; }
-.quiet-switch .opt { font-family: var(--ink-font); color: var(--ink); padding-bottom: 1px; border-bottom: 2px solid transparent; }
-.quiet-switch .opt:hover { color: var(--ink-hover); }
-.quiet-switch .opt.on { font-family: dinMedium; border-bottom-color: var(--green); }
+/* word shape, on the Advanced page */
+.shape-row { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; margin: 6px 0 8px; }
+.shape-label { font-family: var(--ink-font); font-size: 13px; white-space: nowrap; cursor: help; }
+
 
 .notation { display: flex; margin-top: 20px; }
 .notation .toggle { height: 35px; flex: 1; padding: 0; font-size: 14px; }
@@ -176,16 +181,6 @@ button:disabled { cursor: default; }
 .row-close:hover { opacity: 1; }
 .row-adds { display: flex; flex-wrap: wrap; gap: 4px 18px; margin: 0 0 6px; }
 
-/* word family tab */
-.family .control { margin-bottom: 10px; }
-.family-row { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 14px; min-height: 36px; }
-.family-chip { min-width: 96px; }
-.family-chip .chip-label { cursor: default; padding: 3px 10px; }
-.family-actions { display: flex; gap: 14px; }
-.family-hint { font-family: var(--ink-font); font-size: 13px; margin: 6px 0 0; }
-.family-next { display: block; margin-top: 4px; font-family: dinMedium; }
-.family-check { margin-top: 12px; }
-.picker-closed { font-family: var(--ink-font); font-size: 13px; width: 358px; max-width: 100%; min-height: 120px; margin: 0; }
 .row-empty { font-family: dinLight; font-size: 13px; line-height: 30px; }
 
 .chip-wrap { position: relative; }
@@ -195,6 +190,7 @@ button:disabled { cursor: default; }
 }
 .chip:hover { background: var(--hover); }
 .chip-label { display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 3px 4px 3px 8px; flex: 1; }
+.chip-label.plain { cursor: default; }
 .spelling { font-family: robotoLight, Arial, sans-serif; font-weight: 700; white-space: nowrap; }
 .chip-tags { font: 10px/1.1 dinMedium, Arial, sans-serif; color: var(--ink); white-space: nowrap; }
 .chip-x { padding: 0 7px 0 3px; font-size: 12px; color: var(--ink); }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { strToU8, gzipSync } from 'fflate';
 import config from '../pack.config.json';
-import { formatFrequency, gpcsOf, gpcLabel, unpack } from '../src/lib/dataset';
+import { formatFrequency, gpcsOf, gpcLabel, unpack, wordShape } from '../src/lib/dataset';
 import { resultsToCsv, resultsToText } from '../src/lib/export';
 import { Morph, affixById, alignLetters } from '../src/lib/morph';
 import { emptyQuery, type Criterion, type Query } from '../src/lib/query';
@@ -168,6 +168,26 @@ describe('search', () => {
   });
 });
 
+describe('word shape', () => {
+  const shape = (w: string) => wordShape(ds, ds.wordIndex.get(w)!);
+
+  it('reads the shape of a word from its sound spellings', () => {
+    expect(shape('cat')).toBe('CVC');
+    expect(shape('ship')).toBe('CVC'); // sh is one consonant sound spelling
+    expect(shape('spit')).toBe('CCVC');
+    expect(shape('make')).toBe('CVCe'); // the e of a split digraph
+    expect(shape('baked')).toBe('CVCeC');
+    expect(shape('sign')).toBe('CVC'); // the silent g is left out
+    expect(shape('the')).toBe('CV');
+    expect(shape('act')).toBe('VCC');
+  });
+
+  it('selects words by shape, alone or with a sound spelling', () => {
+    expect(words({ shape: 'CVCe' })).toEqual(['bake', 'cake', 'cube', 'lake', 'make']);
+    expect(words({ shape: 'CVC', all: [unit(['i_I'])] })).toEqual(['pin', 'ship', 'sit', 'tin']);
+  });
+});
+
 describe('units', () => {
   const g = (...keys: string[]) => keys.map((k) => ds.gpcByKey.get(k)!);
 
@@ -265,6 +285,7 @@ describe('share links', () => {
       all: [unit(['a-e_e', 'k_k'], 'end'), { type: 'affix', affix: 'suf-ed', keepsSound: false }],
       any: [unit(["n'_@n"], 'middle'), unit(['g_#'], 'start')],
       none: [unit(['sh_S'])],
+      shape: null,
       decodable: true,
       taught: ids(ds, 'm_m', 'a_a'),
       wordSet: 'freq',
@@ -278,15 +299,19 @@ describe('share links', () => {
     const hash = encodeState(ds, state);
     expect(decodeState(ds, '#' + hash)).toEqual(state);
 
-    // A tab name survives, and the decodable tab always means a decodable search.
-    const family = defaultState();
-    family.task = 'family';
-    family.query.all = [unit(['a-e_e', 'k_k'], 'end')];
-    family.query.filters = { ...family.query.filters, syllablesMax: 1 };
-    expect(encodeState(ds, family)).toBe('tab=family&all=a-e_e+k_k:e&syl=-1');
-    expect(decodeState(ds, '#tab=family&all=a-e_e+k_k:e&syl=-1')).toEqual(family);
+    // A page name and a word shape survive, and the decodable page always means a decodable search.
+    const advanced = defaultState();
+    advanced.task = 'advanced';
+    advanced.query.all = [unit(['a-e_e', 'k_k'], 'end')];
+    advanced.query.shape = 'CVCe';
+    advanced.query.filters = { ...advanced.query.filters, syllablesMax: 1 };
+    expect(encodeState(ds, advanced)).toBe('tab=advanced&all=a-e_e+k_k:e&shape=CVCe&syl=-1');
+    expect(decodeState(ds, '#tab=advanced&all=a-e_e+k_k:e&shape=CVCe&syl=-1')).toEqual(advanced);
     expect(decodeState(ds, '#tab=decodable').query.decodable).toBe(true);
     expect(decodeState(ds, '#tab=nonsense').task).toBe('find');
+    expect(decodeState(ds, '#shape=<script>').query.shape).toBeNull();
+    // Links from earlier trial builds still open: "family" is now on the Advanced page.
+    expect(decodeState(ds, '#tab=family&all=a-e_e+k_k:e').task).toBe('advanced');
 
     // A list starts with no limits; limits a person sets are written into the link.
     expect(defaultState().query.filters).toEqual(emptyQuery().filters);

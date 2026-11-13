@@ -1,11 +1,13 @@
 // Step 3: what has been selected, in rows.
 //
-// "search" (tabs Find words and Word parts):
-//   main row:  every item must be in the word (AND). "+" joins two neighbours
-//              into one unit, such as "ake".
-//   OR row:    at least one item must be in the word.   (added with a button)
-//   NOT row:   none of the items may be in the word.    (added with a button)
-// "decodable" (tab Decodable list):
+// "search" (pages Find Words, Sound to Spelling, Advanced):
+//   main row:  every item must be in the word (AND).
+//   On the Advanced page only: "+" joins two neighbours into one unit, such
+//   as "ake"; a click on an item sets its place in the word; and two more
+//   rows can be added:
+//   OR row:    at least one item must be in the word.
+//   NOT row:   none of the items may be in the word.
+// "decodable" (page Decodable List):
 //   main row:  the sound spellings students know.
 //   MUST HAVE: sound spellings every word must contain. (added with a button)
 //
@@ -28,6 +30,10 @@ interface Props {
   activeRow: Row;
   /** Optional rows that are showing. A row that holds something always shows. */
   openRows: Row[];
+  /** Optional rows this page lets a person add ("+ or one of these"). */
+  addableRows: Row[];
+  /** true on the Advanced page: the join "+" and the menu on each selected item (place in the word). */
+  advanced: boolean;
   onActivate: (row: Row) => void;
   onOpenRow: (row: Row) => void;
   /** Empties an optional row and hides it. */
@@ -95,7 +101,7 @@ export function Selection(props: Props) {
   const main = ORDER[variant][0];
   const count = (row: Row) => (row === 'taught' ? query.taught.length : query[row].length);
   const rows = ORDER[variant].filter((row) => row === main || props.openRows.includes(row) || count(row) > 0);
-  const addable = ORDER[variant].filter((row) => !rows.includes(row));
+  const addable = ORDER[variant].filter((row) => !rows.includes(row) && props.addableRows.includes(row));
   const multipleRows = rows.length > 1;
 
   const chip = (row: GroupName, c: Criterion, index: number) => {
@@ -104,21 +110,28 @@ export function Selection(props: Props) {
     return (
       <div className={open ? 'chip-wrap open' : 'chip-wrap'}>
         <div className="chip">
-          <button
-            type="button"
-            className="chip-label"
-            aria-haspopup="menu"
-            aria-expanded={open}
-            title="Choices for this item"
-            onClick={(e) => {
-              e.stopPropagation();
-              props.onActivate(row);
-              setMenu(open ? null : { row, index });
-            }}
-          >
-            <span className="spelling">{criterionLabel(ds, c, notation)}</span>
-            {tags.length > 0 && <span className="chip-tags">{tags.join(' · ')}</span>}
-          </button>
+          {props.advanced ? (
+            <button
+              type="button"
+              className="chip-label"
+              aria-haspopup="menu"
+              aria-expanded={open}
+              title="Choices for this item"
+              onClick={(e) => {
+                e.stopPropagation();
+                props.onActivate(row);
+                setMenu(open ? null : { row, index });
+              }}
+            >
+              <span className="spelling">{criterionLabel(ds, c, notation)}</span>
+              {tags.length > 0 && <span className="chip-tags">{tags.join(' · ')}</span>}
+            </button>
+          ) : (
+            <span className="chip-label plain">
+              <span className="spelling">{criterionLabel(ds, c, notation)}</span>
+              {tags.length > 0 && <span className="chip-tags">{tags.join(' · ')}</span>}
+            </span>
+          )}
           <button
             type="button"
             className="chip-x"
@@ -271,7 +284,7 @@ export function Selection(props: Props) {
                       {index + 1 < items.length && (
                         <div className="joiner">
                           <div className="and">{row === 'any' ? 'OR' : row === 'none' ? 'OR' : 'AND'}</div>
-                          {c.type === 'unit' && items[index + 1].type === 'unit' ? (
+                          {props.advanced && c.type === 'unit' && items[index + 1].type === 'unit' ? (
                             <button
                               type="button"
                               className="plus"

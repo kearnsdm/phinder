@@ -137,6 +137,7 @@ export function describeQuery(ds: Dataset, q: Query, notation: Notation): string
   if (q.all.length) parts.push(`with ${q.all.map(name).join(' and ')}`);
   if (q.any.length) parts.push(`with ${q.any.length > 1 ? 'at least one of ' : ''}${q.any.map(name).join(', ')}`);
   if (q.none.length) parts.push(`without ${q.none.map(name).join(' or ')}`);
+  if (q.shape) parts.push(`with the shape ${q.shape}`);
   if (q.decodable) {
     parts.push(
       `made only from known sound spellings (${q.taught.map((id) => gpcLabel(ds.gpcs[id], notation)).join(', ') || 'none listed'})`,

@@ -25,8 +25,8 @@ interface Props {
   word: string;
   onWord: (w: string) => void;
   onBack: () => void;
-  /** Start a new search in the word list. `family` opens it on the "Word family" tab. */
-  onFind: (criteria: Criterion[], family?: boolean) => void;
+  /** Start a new search in the word list. `oneSyllable` also limits it to one-syllable words. */
+  onFind: (criteria: Criterion[], oneSyllable?: boolean) => void;
 }
 
 // One hue, light to dark: darker means more consistent. Label ink is chosen per step for contrast.

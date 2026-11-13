@@ -41,6 +41,8 @@ export interface Query {
   any: Criterion[];
   /** A word must match none of these. */
   none: Criterion[];
+  /** The word shape the word must have, for example "CVC" (see wordShape in dataset.ts); null for any shape. */
+  shape: string | null;
   /** true: every sound spelling in the word must be on the taught list (or named in `all` / `any`). */
   decodable: boolean;
   taught: number[];
@@ -67,6 +69,7 @@ export const emptyQuery = (): Query => ({
   all: [],
   any: [],
   none: [],
+  shape: null,
   decodable: false,
   taught: [],
   wordSet: 'all',
@@ -75,7 +78,10 @@ export const emptyQuery = (): Query => ({
 
 /** A search needs something to look for before it can return words. */
 export const hasCriteria = (q: Query): boolean =>
-  q.all.length > 0 || q.any.length > 0 || (q.decodable && q.taught.length > 0);
+  q.all.length > 0 || q.any.length > 0 || q.shape !== null || (q.decodable && q.taught.length > 0);
+
+/** The word shapes offered on the Advanced page. */
+export const SHAPES = ['CVC', 'CCVC', 'CVCC', 'CCVCC', 'CVCe', 'CCVCe', 'CV', 'VC'];
 
 
 export type SortKey = 'freq-desc' | 'freq-asc' | 'alpha-asc' | 'alpha-desc' | 'length-asc' | 'length-desc';
