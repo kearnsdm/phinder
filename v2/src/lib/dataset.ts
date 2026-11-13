@@ -136,19 +136,30 @@ export function buildDataset(packed: PackedData): Dataset {
   };
 }
 
+const VOWEL_LETTERS = 'aeiouy';
+
 /**
  * The shape of a word in sound spellings:
  *   C = one consonant sound spelling (b, sh, ck, x)
  *   V = one vowel sound spelling (a, ai, ar)
- *   e = the e of a split digraph (make = CVCe)
- * Silent letters are left out (knee = CV, horse = CVC).
+ *   e = the final e of a vowel-consonant-e pattern
+ * Other silent letters are left out (knee = CV, horse = CVC).
+ *
+ * Every word with the vowel-consonant-e spelling pattern gets the "e",
+ * whatever its vowel sound (Devin, Nov 13, 2026): make, have and some are
+ * all CVCe. The data codes most of these with a split digraph (a-e + k).
+ * A few are coded as vowel + consonant + silent e instead (ache = a + ch + e);
+ * those count too, when one vowel letter, one consonant sound spelling and
+ * a final e end the word as written. Words such as house, leave and horse
+ * do not count: two letters spell their vowel.
  */
 export function wordShape(ds: Dataset, i: number): string {
   const known = ds.shapes[i];
   if (known !== undefined) return known;
+  const gpcs = gpcsOf(ds, ds.seq[i]);
   let shape = '';
   let pendingE = false;
-  for (const g of gpcsOf(ds, ds.seq[i])) {
+  for (const g of gpcs) {
     const s = g.phoneme.struct;
     if (s === 'S') continue;
     shape += s === 'C' || s === 'CC' ? 'C' : 'V';
@@ -157,6 +168,26 @@ export function wordShape(ds: Dataset, i: number): string {
       pendingE = false;
     }
     if (g.splitVowel !== null) pendingE = true;
+  }
+
+  // ache, axe, niche: vowel letter + one consonant sound spelling + silent e, not coded as a split digraph.
+  const n = gpcs.length;
+  if (n >= 3) {
+    const [vowel, consonant, last] = [gpcs[n - 3], gpcs[n - 2], gpcs[n - 1]];
+    const consonantStruct = consonant.phoneme.struct;
+    if (
+      last.grapheme === 'e' &&
+      last.phoneme.silent &&
+      (consonantStruct === 'C' || consonantStruct === 'CC') &&
+      vowel.grapheme.length === 1 &&
+      VOWEL_LETTERS.includes(vowel.grapheme) &&
+      !vowel.phoneme.silent &&
+      vowel.phoneme.struct !== 'C' &&
+      vowel.phoneme.struct !== 'CC' &&
+      ds.word[i].endsWith(`${vowel.grapheme}${consonant.grapheme}e`)
+    ) {
+      shape += 'e';
+    }
   }
   ds.shapes[i] = shape;
   return shape;

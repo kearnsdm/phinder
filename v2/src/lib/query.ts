@@ -81,7 +81,7 @@ export const hasCriteria = (q: Query): boolean =>
   q.all.length > 0 || q.any.length > 0 || q.shape !== null || (q.decodable && q.taught.length > 0);
 
 /** The word shapes offered on the Advanced page. */
-export const SHAPES = ['CVC', 'CCVC', 'CVCC', 'CCVCC', 'CVCe', 'CCVCe', 'CV', 'VC'];
+export const SHAPES = ['CVC', 'CCVC', 'CVCC', 'CCVCC', 'CVCe', 'CCVCe', 'VCe', 'CV', 'VC'];
 
 
 export type SortKey = 'freq-desc' | 'freq-asc' | 'alpha-asc' | 'alpha-desc' | 'length-asc' | 'length-desc';

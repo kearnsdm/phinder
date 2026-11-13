@@ -24,6 +24,7 @@ export const IPA_LIST = PHONEMES.map(([code, sc, ipa]) =>
 // word, frequency ('' = none), sound spellings, syllables
 const WORDS: [string, string, string, number][] = [
   ["a-bomb", '', 'a_e_ b_b_ o_A_ m_m_ b_#_', 2],
+  ['ache', '6.3', 'a_e_ ch_k_ e_#_', 1],
   ['act', '80', 'a_a_ c_k_ t_t_', 1],
   ['action', '120', 'a_a_ c_k_ ti_S_ o_@_ n_n_', 2],
   ['aesthetic', '', 'ae_E_ s_s_ th_T_ e_E_ t_t_ i_I_ c_k_', 3],

@@ -90,7 +90,7 @@ describe('search', () => {
 
   it('never matches part of a longer grapheme', () => {
     // "a_e" (a = /ā/) must not match the split digraph "a-e_e".
-    expect(words({ all: [unit(['a_e'])] })).toEqual(['a-bomb', 'making']);
+    expect(words({ all: [unit(['a_e'])] })).toEqual(['a-bomb', 'ache', 'making']);
   });
 
   it('requires every sound spelling in the "all" group', () => {
@@ -178,12 +178,15 @@ describe('word shape', () => {
     expect(shape('make')).toBe('CVCe'); // the e of a split digraph
     expect(shape('baked')).toBe('CVCeC');
     expect(shape('sign')).toBe('CVC'); // the silent g is left out
+    expect(shape('ache')).toBe('VCe'); // vowel + consonant + final e, although not coded as a split digraph
+    expect(shape('a-bomb')).toBe('VCVC'); // a silent letter that is not a final e adds nothing
     expect(shape('the')).toBe('CV');
     expect(shape('act')).toBe('VCC');
   });
 
   it('selects words by shape, alone or with a sound spelling', () => {
     expect(words({ shape: 'CVCe' })).toEqual(['bake', 'cake', 'cube', 'lake', 'make']);
+    expect(words({ shape: 'VCe' })).toEqual(['ache']);
     expect(words({ shape: 'CVC', all: [unit(['i_I'])] })).toEqual(['pin', 'ship', 'sit', 'tin']);
   });
 });

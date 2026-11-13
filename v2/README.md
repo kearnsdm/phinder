@@ -14,7 +14,7 @@ version (in the repository root) and adds new ways to search.
 | Sound to Spelling | The same steps the other way round: pick a phoneme first, then one of its spellings. |
 | Advanced | Every other way to select words: OR and NOT rows, join (+), place in the word, word shape, word parts, and a swap button that makes the two grids trade places. |
 | Join (+) | On the Advanced page. Joined sound spellings form one unit. A split digraph is written around the next grapheme (`a-e` + `k` = `ake`). Units are labelled "rime" or "body" when they have that shape. |
-| Word shape | On the Advanced page. CVC, CCVC, CVCC, CCVCC, CVCe, CCVCe, CV, VC. C is one consonant sound spelling, V is one vowel sound spelling, and e is the e of a split digraph (see `wordShape` in `src/lib/dataset.ts`). |
+| Word shape | On the Advanced page. CVC, CCVC, CVCC, CCVCC, CVCe, CCVCe, VCe, CV, VC. C is one consonant sound spelling, V is one vowel sound spelling, and e is the final e of a vowel-consonant-e pattern, whatever the vowel sound (make, have, some, ache). See `wordShape` in `src/lib/dataset.ts`. |
 | Position | On the Advanced page. Click a selected sound spelling to require it at the start, in the middle, or at the end of the word. |
 | Or, and not | On the Advanced page. Under the selection, "+ or one of these" and "+ but none of these" add an OR row and a NOT row. |
 | Decodable list | The tab holds the sound spellings students know. The list shows only words made entirely from them. "+ words must also have" adds sound spellings that every word must contain. |

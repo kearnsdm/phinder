@@ -61,8 +61,8 @@ export function Help({ onClose }: { onClose: () => void }) {
             <b>Place in the word.</b> Click a selected sound spelling to say where it must be: start, middle or end.
           </li>
           <li>
-            <b>Word shape.</b> Choose a shape such as CVC. C is one consonant sound spelling (b, sh, ck). V is one vowel sound spelling (a, ai, ar). The e in CVCe is the e of a split
-            digraph, as in &ldquo;make.&rdquo;
+            <b>Word shape.</b> Choose a shape such as CVC. C is one consonant sound spelling (b, sh, ck). V is one vowel sound spelling (a, ai, ar). The e in CVCe is the final e of a
+            vowel-consonant-e pattern, as in &ldquo;make,&rdquo; &ldquo;have&rdquo; and &ldquo;some.&rdquo;
           </li>
           <li>
             <b>Start with a sound.</b> The round button with two arrows between steps 1 and 2 makes the two grids trade places.

@@ -360,7 +360,7 @@ export function App() {
 
               {advanced && (
                 <div className="shape-row">
-                  <div className="shape-label" title="C = one consonant sound spelling (b, sh, ck). V = one vowel sound spelling (a, ai, ar). e = the e of a split digraph (make).">
+                  <div className="shape-label" title="C = one consonant sound spelling (b, sh, ck). V = one vowel sound spelling (a, ai, ar). e = the final e of a vowel-consonant-e pattern (make, have, some).">
                     Word shape
                   </div>
                   <div className="btn-row" role="group" aria-label="Word shape">
