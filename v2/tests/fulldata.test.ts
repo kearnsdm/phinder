@@ -20,6 +20,11 @@ describe.skipIf(!present)('full word data', () => {
     expect(ds.gpcs.length).toBeGreaterThan(370);
   });
 
+  it('holds no blocked word, and keeps ordinary words that look similar', () => {
+    for (const w of ['ass', 'tit', 'tits', 'piss', 'pissed']) expect(ds.wordIndex.has(w)).toBe(false);
+    for (const w of ['class', 'pass', 'title', 'heroines', 'snigger', 'analysis']) expect(ds.wordIndex.has(w)).toBe(true);
+  });
+
   it('has a display for every phoneme that occurs', () => {
     const used = new Set<number>();
     for (const seq of ds.seq) for (const g of gpcsOf(ds, seq)) used.add(g.phoneme.index);

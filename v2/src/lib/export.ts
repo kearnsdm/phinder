@@ -14,7 +14,13 @@ const csvCell = (value: string | number): string => {
   return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 };
 
-/** A spreadsheet file. It starts with a byte-order mark so Excel reads the sound symbols correctly. */
+/** The credit line on printed lists, word cards and the spreadsheet file. */
+export const CREDIT = 'Made with Phinder, devinkearns.com';
+
+/**
+ * A spreadsheet file. It starts with a byte-order mark so Excel reads the
+ * sound symbols correctly, and ends with a blank row and the credit line.
+ */
 export function resultsToCsv(ds: Dataset, indexes: number[], notation: Notation): string {
   const rows = [['word', 'sound spellings', 'syllables', 'letters', 'frequency']];
   for (const i of indexes) {
@@ -26,7 +32,8 @@ export function resultsToCsv(ds: Dataset, indexes: number[], notation: Notation)
       Number.isNaN(ds.freq[i]) ? '' : String(ds.freq[i]),
     ]);
   }
-  return '﻿' + rows.map((r) => r.map(csvCell).join(',')).join('\r\n') + '\r\n';
+  rows.push([], [CREDIT]);
+  return '\uFEFF' + rows.map((r) => r.map(csvCell).join(',')).join('\r\n') + '\r\n';
 }
 
 /** One word per line. */

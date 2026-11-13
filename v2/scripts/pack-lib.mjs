@@ -11,10 +11,11 @@ const hexChars = (cells) =>
     .join('');
 
 /**
- * @param {{ words: string, soundList: string, ipaList: string, gpcCharBase: number }} raw
- * @returns {{ payload: object, report: { words: number, skipped: number, problems: Record<string, number> } }}
+ * @param {{ words: string, soundList: string, ipaList: string, gpcCharBase: number, isBlocked?: (word: string) => boolean }} raw
+ *   isBlocked: words for which it returns true are left out (see blocked-words.mjs).
+ * @returns {{ payload: object, report: { words: number, skipped: number, blocked: number, problems: Record<string, number> } }}
  */
-export function packRaw({ words, soundList, ipaList, gpcCharBase }) {
+export function packRaw({ words, soundList, ipaList, gpcCharBase, isBlocked }) {
   // ---- phonemes: code, Sound Code display, IPA display ----
   const phonemes = [];
   const phonemeIndex = new Map();
@@ -57,6 +58,7 @@ export function packRaw({ words, soundList, ipaList, gpcCharBase }) {
   const rows = [];
   const problems = {};
   let skipped = 0;
+  let blocked = 0;
   for (const line of words.replace(/^﻿/, '').split(/\r?\n/)) {
     if (!line.trim()) continue;
     const cells = line.split('\t');
@@ -65,6 +67,10 @@ export function packRaw({ words, soundList, ipaList, gpcCharBase }) {
       continue;
     }
     const word = cells[0].trim();
+    if (isBlocked && isBlocked(word)) {
+      blocked++;
+      continue;
+    }
     const freq = cells[1].trim() === '' ? '' : String(Number(cells[1]));
     const syllables = parseInt(cells[3], 10) || 0;
     let seq = '';
@@ -86,6 +92,6 @@ export function packRaw({ words, soundList, ipaList, gpcCharBase }) {
 
   return {
     payload: { v: 1, phonemes, gpcs, listedCount, words: rows.join('\n') },
-    report: { words: rows.length, skipped, problems },
+    report: { words: rows.length, skipped, blocked, problems },
   };
 }

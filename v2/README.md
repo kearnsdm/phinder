@@ -40,6 +40,10 @@ scrambled with a fixed key, so a person cannot open it as text. This is not
 real protection: the app must be able to read the file, so a programmer could
 too. Keeping the data fully private would need the search to run on a server.
 
+`npm run data` also leaves out the words in `scripts/blocked-words.mjs`
+(words unsuitable for children, from the first version's list, plus their
+plural, possessive and verb forms). Those words never reach the site.
+
 Display corrections for phonemes (for example `/@l/` shown as `/əl/`) are in
 `src/lib/phonemeMeta.ts`, one line each, so they are easy to review or remove.
 
@@ -91,6 +95,8 @@ checks against the full data (`tests/fulldata.test.ts`).
 | Path | Purpose |
 | --- | --- |
 | `scripts/pack-lib.mjs`, `scripts/build-data.mjs` | Clean and pack the raw data |
+| `scripts/blocked-words.mjs` | Words left out of the packed data |
+| `scripts/make-local.mjs` | Make the single-file test version |
 | `src/lib/dataset.ts` | Load the packed data |
 | `src/lib/search.ts` | The search engine |
 | `src/lib/query.ts`, `src/lib/edit.ts` | The shape of a search and the changes a user can make to it |

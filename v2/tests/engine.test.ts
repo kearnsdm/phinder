@@ -9,7 +9,9 @@ import { allowedGpcs, matchedPositions, search, sortResults } from '../src/lib/s
 import { computeStats, readingConsistency, spellingConsistency } from '../src/lib/stats';
 import { bodyRime, unitLabel, unitShape, unitSpelling } from '../src/lib/units';
 import { decodeState, defaultState, encodeState } from '../src/lib/urlState';
-import { fixtureDataset, fixturePacked, ids } from './fixture';
+import { isBlocked } from '../scripts/blocked-words.mjs';
+import { packRaw } from '../scripts/pack-lib.mjs';
+import { fixtureDataset, fixturePacked, ids, IPA_LIST, SOUND_LIST, WORD_LIST } from './fixture';
 
 const ds = fixtureDataset();
 const morph = new Morph(ds);
@@ -57,6 +59,26 @@ describe('data loading', () => {
     expect(formatFrequency(95.5)).toBe('95.5');
     expect(formatFrequency(0.31)).toBe('0.31');
     expect(formatFrequency(NaN)).toBe('');
+  });
+});
+
+describe('blocked words', () => {
+  it('leaves blocked words out of the packed data', () => {
+    const raw = { words: WORD_LIST, soundList: SOUND_LIST, ipaList: IPA_LIST, gpcCharBase: 256 };
+    const blockCat = (w: string) => w === 'cat' || w === 'cats';
+    const { payload, report } = packRaw({ ...raw, isBlocked: blockCat });
+    const kept = payload.words.split('\n').map((l) => l.split('\t')[0]);
+    expect(report.blocked).toBe(2);
+    expect(kept).not.toContain('cat');
+    expect(kept).not.toContain('cats');
+    expect(kept).toContain('cake');
+  });
+
+  it('blocks forms of a listed word but not ordinary words that look similar', () => {
+    for (const w of ['shit', 'shits', 'shitting', 'shithead', 'pissed-off', 'whoring', 'pussies']) expect(isBlocked(w)).toBe(true);
+    for (const w of ['class', 'pass', 'title', 'heroines', 'anti-heroines', 'snigger', 'mishit', 'cocker', 'analysis', 'abreast']) {
+      expect(isBlocked(w)).toBe(false);
+    }
   });
 });
 
@@ -276,6 +298,8 @@ describe('export', () => {
     expect(csv.split('\r\n')[0]).toBe('﻿word,sound spellings,syllables,letters,frequency');
     expect(csv.split('\r\n')[1]).toBe('cat,c = /k/  a = /ă/  t = /t/,1,3,95.5');
     expect(csv.split('\r\n')[2]).toBe('a-bomb,a = /ā/  b = /b/  o = /ŏ/  m = /m/  b = / /,2,5,');
+    // The file ends with a blank row and the credit line.
+    expect(csv.split('\r\n').slice(3)).toEqual(['', '"Made with Phinder, devinkearns.com"', '']);
     expect(resultsToText(ds, idx)).toBe('cat\na-bomb');
   });
 });

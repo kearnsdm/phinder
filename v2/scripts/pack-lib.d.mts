@@ -3,6 +3,7 @@ export function packRaw(raw: {
   soundList: string;
   ipaList: string;
   gpcCharBase: number;
+  isBlocked?: (word: string) => boolean;
 }): {
   payload: {
     v: number;
@@ -11,5 +12,5 @@ export function packRaw(raw: {
     listedCount: number;
     words: string;
   };
-  report: { words: number; skipped: number; problems: Record<string, number> };
+  report: { words: number; skipped: number; blocked: number; problems: Record<string, number> };
 };

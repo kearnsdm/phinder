@@ -30,6 +30,7 @@ import { decodeState, defaultState, encodeState, type AppState } from './lib/url
 type Alert = { kind: 'ok' | 'bad'; text: string; id: number };
 
 const LOGO = inlineAssets().logo ?? `${import.meta.env.BASE_URL}logo.png`;
+const SITE = 'https://www.devinkearns.com/';
 
 async function copyText(text: string): Promise<boolean> {
   try {
@@ -241,7 +242,12 @@ export function App() {
   return (
     <div className="container">
       <header className="top">
-        <img className="logo" src={LOGO} alt="Phinder" width={130} height={80} />
+        <div className="brand">
+          <img className="logo" src={LOGO} alt="Phinder" width={130} height={80} />
+          <a className="byline" href={SITE} target="_blank" rel="noopener">
+            by Devin Kearns, Ph.D.
+          </a>
+        </div>
         <nav className="views" aria-label="Screens">
           <button type="button" className={state.view === 'find' ? 'link on' : 'link'} onClick={showList}>
             Word List
@@ -368,7 +374,7 @@ export function App() {
 
       <footer>
         &copy; {new Date().getFullYear()}, Devin Kearns, Michael Li, Steven Li. This website is for non-commercial use only.{' '}
-        <a href="mailto:devin.kearns@gmail.com">
+        <a href={`${SITE}contact/`} target="_blank" rel="noopener">
           <b>Contact us</b>
         </a>{' '}
         with questions or suggestions.

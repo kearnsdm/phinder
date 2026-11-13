@@ -15,6 +15,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gzipSync, strToU8 } from 'fflate';
+import { isBlocked } from './blocked-words.mjs';
 import { packRaw } from './pack-lib.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -38,6 +39,7 @@ const { payload, report } = packRaw({
   soundList: readRaw('SoundList.txt'),
   ipaList: readRaw('Sound_IPA_List.txt'),
   gpcCharBase: config.gpcCharBase,
+  isBlocked,
 });
 
 const zipped = gzipSync(strToU8(JSON.stringify(payload)), { level: 9 });
@@ -50,5 +52,6 @@ writeFileSync(outFile, zipped);
 console.log(`Packed ${report.words.toLocaleString()} words, ${payload.gpcs.length} sound spellings`);
 console.log(`(${payload.listedCount} from SoundList.txt, ${payload.gpcs.length - payload.listedCount} found only in the word list),`);
 console.log(`${payload.phonemes.length} phoneme codes -> ${outFile} (${(zipped.length / 1024).toFixed(0)} KB)`);
+console.log(`Left out ${report.blocked} blocked words (scripts/blocked-words.mjs).`);
 if (report.skipped) console.log(`Skipped ${report.skipped} rows without sound spellings.`);
 if (Object.keys(report.problems).length) console.log('Unreadable tokens ignored:', report.problems);
