@@ -9,6 +9,7 @@ import type { Notation } from '../lib/phonemeMeta';
 import { defaultFilters, hasCriteria, SORTS, type Filters, type Query, type SortKey } from '../lib/query';
 import { matchedPositions } from '../lib/search';
 import type { Stats } from '../lib/stats';
+import { FREQUENCY_STOPS, RangeButtons, RangeSlider } from './RangeControls';
 
 const PAGE = 200;
 const MIN_ROWS = 10; // the panel keeps its height when the list is short, as before
@@ -201,21 +202,16 @@ export function WordList(props: Props) {
 
 // ---- Options ---------------------------------------------------------------
 
-function NumberBox({ value, onChange, label, min = 0 }: { value: number | null; onChange: (v: number | null) => void; label: string; min?: number }) {
-  return (
-    <input
-      type="number"
-      className="num-box"
-      aria-label={label}
-      min={min}
-      value={value ?? ''}
-      placeholder="any"
-      onChange={(e) => {
-        const v = e.target.value.trim();
-        onChange(v === '' || Number.isNaN(Number(v)) ? null : Math.max(min, Number(v)));
-      }}
-    />
-  );
+const SYLLABLES = [1, 2, 3, 4, 5, 6, 7, 8];
+const LETTERS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
+const FREQUENCY_LABELS = [0, 1, 10, 100, 1000, 10000, Infinity];
+const frequencyText = (v: number) => (v >= 1000 ? v.toLocaleString('en-US') : String(v));
+
+/** "1 to 100 per million words", or "Any frequency" when no limit is set. */
+function frequencySummary(min: number | null, max: number | null): string {
+  if (min === null && max === null) return 'Any frequency';
+  const range = min !== null && max !== null ? `${frequencyText(min)} to ${frequencyText(max)}` : min !== null ? `${frequencyText(min)} or more` : `Up to ${frequencyText(max!)}`;
+  return `${range} per million words`;
 }
 
 function Options(props: Props & { onDone: () => void }) {
@@ -223,73 +219,47 @@ function Options(props: Props & { onDone: () => void }) {
   const f = query.filters;
   const set = (patch: Partial<Filters>) => props.onFilters({ ...f, ...patch });
 
-  const buttonRow = (field: 'syllablesMax' | 'lettersMax', values: number[], label: string) => (
-    <div className="btn-row" role="group" aria-label={label}>
-      {values.map((v) => (
-        <button key={v} type="button" className={f[field] === v ? 'on' : ''} aria-pressed={f[field] === v} onClick={() => set({ [field]: v })}>
-          {v}
-        </button>
-      ))}
-      <button type="button" className={f[field] === null ? 'on' : ''} aria-pressed={f[field] === null} onClick={() => set({ [field]: null })}>
-        Any
-      </button>
-    </div>
-  );
-
-  const freqPresets: [string, number | null, number | null][] = [
-    ['Any', null, null],
-    ['1 or higher', 1, null],
-    ['10 or higher', 10, null],
-    ['100 or higher', 100, null],
-  ];
-
   return (
     <div className="options">
       <div className="opt">
-        <strong>Max Syllables</strong>
-        {buttonRow('syllablesMax', [1, 2, 3, 4, 5, 6, 7, 8], 'Maximum syllables')}
+        <strong>Syllables</strong>
+        <RangeButtons values={SYLLABLES} min={f.syllablesMin} max={f.syllablesMax} unit="syllable" onChange={(min, max) => set({ syllablesMin: min, syllablesMax: max })} />
       </div>
       <div className="opt">
-        <strong>Max Letters</strong>
-        {buttonRow('lettersMax', [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], 'Maximum letters')}
+        <strong>Letters</strong>
+        <RangeButtons values={LETTERS} min={f.lettersMin} max={f.lettersMax} unit="letter" onChange={(min, max) => set({ lettersMin: min, lettersMax: max })} />
       </div>
-      <div className="opt">
-        <strong>Min Syllables</strong>
-        <span className="inline">
-          <NumberBox value={f.syllablesMin} onChange={(v) => set({ syllablesMin: v })} label="Minimum syllables" min={1} />
-          <strong className="gap">Min Letters</strong>
-          <NumberBox value={f.lettersMin} onChange={(v) => set({ lettersMin: v })} label="Minimum letters" min={1} />
-        </span>
-      </div>
-      <div className="opt">
-        <strong title="Frequency per million words (Fitt, 2000)">Frequency Range</strong>
-        <span className="inline">
-          <NumberBox value={f.frequencyMin} onChange={(v) => set({ frequencyMin: v })} label="Lowest frequency" />
-          <span>to</span>
-          <NumberBox value={f.frequencyMax} onChange={(v) => set({ frequencyMax: v })} label="Highest frequency" />
-          <span className="presets">
-            {freqPresets.map(([label, lo, hi]) => (
-              <button key={label} type="button" className={f.frequencyMin === lo && f.frequencyMax === hi ? 'link small on' : 'link small'} onClick={() => set({ frequencyMin: lo, frequencyMax: hi })}>
-                {label}
-              </button>
-            ))}
-          </span>
-        </span>
+      <div className="opt freq">
+        <strong title="Frequency per million words, from Fitt (2000)">Frequency</strong>
+        <div className="freq-controls">
+          <div className="range-summary">
+            {frequencySummary(f.frequencyMin, f.frequencyMax)}
+            {(f.frequencyMin !== null || f.frequencyMax !== null) && <span className="range-hint"> &middot; words with no frequency value are left out</span>}
+          </div>
+          <RangeSlider
+            stops={FREQUENCY_STOPS}
+            labels={FREQUENCY_LABELS}
+            min={f.frequencyMin}
+            max={f.frequencyMax}
+            onChange={(min, max) => set({ frequencyMin: min, frequencyMax: max })}
+            format={frequencyText}
+            ariaLabel="Frequency range, per million words"
+          />
+        </div>
       </div>
       <div className="opt">
         <strong>Word Set</strong>
         <label className="check">
           <input type="checkbox" checked={query.wordSet === 'freq'} onChange={(e) => props.onWordSet(e.target.checked ? 'freq' : 'all')} />
           Only words that have a frequency value
-          <span className="muted">
-            {' '}
-            ({query.wordSet === 'freq' ? `${stats.nWords.toLocaleString()} of ${totalWords.toLocaleString()} words` : `off: all ${totalWords.toLocaleString()} words`})
-          </span>
+          {query.wordSet === 'freq' && (
+            <span className="muted">
+              {' '}
+              ({stats.nWords.toLocaleString()} of {totalWords.toLocaleString()} words)
+            </span>
+          )}
         </label>
       </div>
-      <p className="opt-note">
-        Changes apply right away. Frequency is per million words (Fitt, 2000). A frequency range leaves out words that have no frequency value.
-      </p>
       <div className="opt-actions">
         <button type="button" className="apply" onClick={props.onDone}>
           Done

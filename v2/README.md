@@ -17,7 +17,7 @@ version (in the repository root) and adds new ways to search.
 | Position | Click a selected sound spelling to require it at the start, in the middle, or at the end of the word. |
 | Or, and not | Under the selection, "+ or one of these" and "+ but none of these" add an OR row and a NOT row. |
 | Decodable list | The tab holds the sound spellings students know. The list shows only words made entirely from them. "+ words must also have" adds sound spellings that every word must contain. |
-| Options | Lists start with no limits (the first version started with 4 syllables and 10 letters). Limits apply at once, and a line above the list states any limit in force. A word-set switch keeps only words that have a frequency value. |
+| Options | Lists start with no limits (the first version started with 4 syllables and 10 letters). Syllables and letters each have one row of numbered buttons: click the smallest number, then the largest. Frequency has a slider with two handles; its stops follow a 1-2-5 series, so low frequencies get most of the track. Limits apply at once, and a line above the list states any limit in force. A word-set switch keeps only words that have a frequency value. |
 | Frequency | Frequencies are per million words, from Fitt (2000), which is also the source of the word list. |
 | Word list | The count follows "Filter Words". Small frequencies are shown (0.31, not blank). The sort choice is kept. |
 | Export | Copy the words, download a spreadsheet file (CSV), print a list, print word cards. |
