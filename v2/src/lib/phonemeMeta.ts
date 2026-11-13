@@ -2,9 +2,10 @@
 // its sound structure (used for body and rime units), the group it is shown
 // under in the "sound to spelling" picker, and display corrections.
 //
-// DISPLAY CORRECTIONS ARE PROPOSALS. Each one replaces a display string in
+// DISPLAY CORRECTIONS. Each one replaces a display string in
 // Sound_IPA_List.txt that looks like a typing error or a leftover machine
-// code. Delete a line here to go back to the display in the data file.
+// code. Devin reviewed them with example words on November 13, 2026.
+// Delete a line here to go back to the display in the data file.
 
 export type Notation = 'sc' | 'ipa';
 
@@ -103,7 +104,7 @@ export const PHONEME_META: Record<string, Meta> = {
   z: m('C', 'Consonants'),
   S: m('C', 'Consonants'),
   Z: m('C', 'Consonants'),
-  tS: m('C', 'Consonants', { ipa: 'tʃ' }), // data file shows "ʇ"
+  tS: m('C', 'Consonants', { ipa: 'ʧ' }), // data file shows "ʇ"; one character, like "ʤ" for the j sound
   dZ: m('C', 'Consonants'),
   T: m('C', 'Consonants', { ipa: 'θ' }), // data file shows "ɵ"
   D: m('C', 'Consonants'),
