@@ -70,6 +70,18 @@ npm run build
 `devinkearns.com/phinder-is-phabulous/`). The site uses relative addresses, so
 it works at any path. There is no server code.
 
+To test on a computer without a web server, run:
+
+```bash
+npm run build:local
+```
+
+This writes `phinder2-test.html`, one file with the script, styles, fonts,
+logo and packed data inside it. Double-click it to open the site. Opening
+`dist/index.html` from disk does not work: browsers do not let a page opened
+from disk load its script and data files. `phinder2-test.html` contains the
+word data and is git-ignored.
+
 `npm test` runs the unit tests on a small hand-written word list
 (`tests/fixture.ts`). When `public/data/phinder.dat` is present, it also runs
 checks against the full data (`tests/fulldata.test.ts`).

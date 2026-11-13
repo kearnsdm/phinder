@@ -6,7 +6,7 @@ import { Picker, type PickerMode } from './components/Picker';
 import { PrintSheet, type PrintMode } from './components/PrintSheet';
 import { Selection } from './components/Selection';
 import { WordList } from './components/WordList';
-import { loadDataset, type Dataset } from './lib/dataset';
+import { inlineAssets, loadDataset, type Dataset } from './lib/dataset';
 import {
   addAffix,
   addCriterion,
@@ -28,6 +28,8 @@ import { computeStats } from './lib/stats';
 import { decodeState, defaultState, encodeState, type AppState } from './lib/urlState';
 
 type Alert = { kind: 'ok' | 'bad'; text: string; id: number };
+
+const LOGO = inlineAssets().logo ?? `${import.meta.env.BASE_URL}logo.png`;
 
 async function copyText(text: string): Promise<boolean> {
   try {
@@ -94,8 +96,12 @@ export function App() {
     const url = hash ? `#${hash}` : window.location.pathname + window.location.search;
     // Moving between the word list and a word makes a Back step; edits to a search do not.
     const page = `${state.view}:${state.exploreWord}`;
-    if (lastPage.current && lastPage.current !== page) window.history.pushState(null, '', url);
-    else window.history.replaceState(null, '', url);
+    try {
+      if (lastPage.current && lastPage.current !== page) window.history.pushState(null, '', url);
+      else window.history.replaceState(null, '', url);
+    } catch {
+      // Some browsers refuse this for a page opened from disk. The search still works; only the address is stale.
+    }
     lastPage.current = page;
   }, [ds, state]);
 
@@ -153,7 +159,7 @@ export function App() {
   if (!ds || !morph || !stats) {
     return (
       <div className="container">
-        <img className="logo" src={`${import.meta.env.BASE_URL}logo.png`} alt="Phinder" width={130} height={80} />
+        <img className="logo" src={LOGO} alt="Phinder" width={130} height={80} />
         <p className="load-note">Loading the word list&hellip;</p>
       </div>
     );
@@ -235,7 +241,7 @@ export function App() {
   return (
     <div className="container">
       <header className="top">
-        <img className="logo" src={`${import.meta.env.BASE_URL}logo.png`} alt="Phinder" width={130} height={80} />
+        <img className="logo" src={LOGO} alt="Phinder" width={130} height={80} />
         <nav className="views" aria-label="Screens">
           <button type="button" className={state.view === 'find' ? 'link on' : 'link'} onClick={showList}>
             Word List
