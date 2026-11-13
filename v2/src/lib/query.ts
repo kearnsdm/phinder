@@ -57,8 +57,11 @@ export const emptyFilters = (): Filters => ({
   frequencyMax: null,
 });
 
-/** The limits Phinder has always started with: up to 4 syllables and 10 letters. */
-export const defaultFilters = (): Filters => ({ ...emptyFilters(), syllablesMax: 4, lettersMax: 10 });
+/**
+ * The limits a list starts with: none. (The first version started with 4
+ * syllables and 10 letters; Devin removed those defaults on Nov 13, 2026.)
+ */
+export const defaultFilters = (): Filters => emptyFilters();
 
 export const emptyQuery = (): Query => ({
   all: [],

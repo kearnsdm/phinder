@@ -5,7 +5,7 @@
 // data files, so this script puts everything inside the page: the script,
 // the styles, the fonts, the logo, and the packed word data.
 //
-// Run `npm run build:local`. The output, phinder2-test.html, CONTAINS THE WORD
+// Run `npm run build:local`. The output, phinder-trial-N.html (N from trial.json), CONTAINS THE WORD
 // DATA and is git-ignored. Do not commit it.
 
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -15,7 +15,8 @@ import { fileURLToPath } from 'node:url';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const dist = join(root, 'dist');
 const config = JSON.parse(readFileSync(join(root, 'pack.config.json'), 'utf8'));
-const outFile = join(root, 'phinder2-test.html');
+const { trial } = JSON.parse(readFileSync(join(root, 'trial.json'), 'utf8'));
+const outFile = join(root, `phinder-trial-${trial}.html`);
 
 const MIME = { '.otf': 'font/otf', '.ttf': 'font/ttf', '.woff2': 'font/woff2', '.png': 'image/png', '.ico': 'image/x-icon' };
 const dataUri = (path) => `data:${MIME[extname(path)] ?? 'application/octet-stream'};base64,${readFileSync(path).toString('base64')}`;

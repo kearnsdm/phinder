@@ -262,7 +262,7 @@ export function Explore({ ds, stats, morph, query, notation, word, onWord, onBac
                 </div>
                 <div>
                   <dt>Frequency</dt>
-                  <dd>{Number.isNaN(ds.freq[index]) ? 'no value' : formatFrequency(ds.freq[index])}</dd>
+                  <dd title="Frequency per million words (Fitt, 2000)">{Number.isNaN(ds.freq[index]) ? 'no value' : `${formatFrequency(ds.freq[index])} per million`}</dd>
                 </div>
                 <div>
                   <dt>Mean consistency</dt>

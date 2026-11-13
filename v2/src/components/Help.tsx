@@ -35,7 +35,7 @@ export function Help({ onClose }: { onClose: () => void }) {
         </ol>
         <ul>
           <li>
-            <b>Start with a sound.</b> Click &ldquo;or start with a sound&rdquo; under the first grid to pick a sound first and then one of its spellings.
+            <b>Start with a sound.</b> Click the round button with two arrows between steps 1 and 2. The two grids trade places: you pick a sound first and then one of its spellings.
           </li>
           <li>
             <b>Or, and not.</b> Under your selection, &ldquo;+ or one of these&rdquo; adds a row of alternatives, and &ldquo;+ but none of these&rdquo; adds a row of sound spellings to
@@ -68,6 +68,9 @@ export function Help({ onClose }: { onClose: () => void }) {
         <ul>
           <li>
             <b>Options.</b> Limit syllables, letters and frequency, or use only words that have a frequency value.
+          </li>
+          <li>
+            <b>Frequency.</b> The number beside a word is its frequency per million words (Fitt, 2000).
           </li>
           <li>
             <b>Sound Code or IPA.</b> Changes how sounds are written.

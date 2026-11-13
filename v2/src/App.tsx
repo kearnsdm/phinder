@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import config from '../pack.config.json';
+import trial from '../trial.json';
 import { Explore } from './components/Explore';
 import { FamilyBox, type FamilyKind, type FamilyPhase } from './components/FamilyBox';
 import { Help } from './components/Help';
@@ -511,6 +512,7 @@ export function App() {
               results={results}
               totalWords={ds.n}
               emptyHint={emptyHint}
+              startFilters={startQueries()[slotOf(task)].filters}
               onSort={(s) => setState((st) => ({ ...st, sort: s }))}
               onFilters={(f) => setQuery((q) => ({ ...q, filters: f }))}
               onWordSet={setWordSet}
@@ -549,6 +551,7 @@ export function App() {
           <b>Contact us</b>
         </a>{' '}
         with questions or suggestions.
+        <span className="trial"> &middot; Trial {trial.trial}</span>
       </footer>
 
       {help && <Help onClose={() => setHelp(false)} />}

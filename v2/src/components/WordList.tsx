@@ -3,10 +3,10 @@
 
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import { formatFrequency, gpcLabel, gpcsOf, type Dataset } from '../lib/dataset';
-import { filterSummary, filtersAreDefault } from '../lib/edit';
+import { filterSummary, filtersAreDefault, sameFilters } from '../lib/edit';
 import type { Morph } from '../lib/morph';
 import type { Notation } from '../lib/phonemeMeta';
-import { defaultFilters, emptyFilters, hasCriteria, SORTS, type Filters, type Query, type SortKey } from '../lib/query';
+import { defaultFilters, hasCriteria, SORTS, type Filters, type Query, type SortKey } from '../lib/query';
 import { matchedPositions } from '../lib/search';
 import type { Stats } from '../lib/stats';
 
@@ -25,6 +25,8 @@ interface Props {
   totalWords: number;
   /** What to say when nothing has been chosen yet. */
   emptyHint: string;
+  /** The limits this kind of list starts with. The line above the list appears only when the limits differ from these. */
+  startFilters: Filters;
   onSort: (s: SortKey) => void;
   onFilters: (f: Filters) => void;
   onWordSet: (s: Query['wordSet']) => void;
@@ -51,7 +53,7 @@ export function WordList(props: Props) {
     () => [...query.all, ...query.any].flatMap((c) => (c.type === 'affix' ? [c.affix] : [])),
     [query.all, query.any],
   );
-  const limits = filterSummary(query.filters, query.wordSet);
+  const limits = sameFilters(query.filters, props.startFilters) && query.wordSet === 'all' ? [] : filterSummary(query.filters, query.wordSet);
   const searching = hasCriteria(query);
   const sortLabel = SORTS.find((s) => s.key === sort)!.label;
 
@@ -136,7 +138,13 @@ export function WordList(props: Props) {
                           ))}
                           {parts.length > 0 && <span className="parts">[{parts.join('; ')}]</span>}
                         </td>
-                        <td className="f">{!Number.isNaN(ds.freq[i]) && <span className="badge">{formatFrequency(ds.freq[i])}</span>}</td>
+                        <td className="f">
+                          {!Number.isNaN(ds.freq[i]) && (
+                            <span className="badge" title={`${formatFrequency(ds.freq[i])} per million words (Fitt, 2000)`}>
+                              {formatFrequency(ds.freq[i])}
+                            </span>
+                          )}
+                        </td>
                       </tr>
                     );
                   })}
@@ -254,7 +262,7 @@ function Options(props: Props & { onDone: () => void }) {
         </span>
       </div>
       <div className="opt">
-        <strong>Frequency Range</strong>
+        <strong title="Frequency per million words (Fitt, 2000)">Frequency Range</strong>
         <span className="inline">
           <NumberBox value={f.frequencyMin} onChange={(v) => set({ frequencyMin: v })} label="Lowest frequency" />
           <span>to</span>
@@ -279,7 +287,9 @@ function Options(props: Props & { onDone: () => void }) {
           </span>
         </label>
       </div>
-      <p className="opt-note">Changes apply right away. A frequency range leaves out words that have no frequency value.</p>
+      <p className="opt-note">
+        Changes apply right away. Frequency is per million words (Fitt, 2000). A frequency range leaves out words that have no frequency value.
+      </p>
       <div className="opt-actions">
         <button type="button" className="apply" onClick={props.onDone}>
           Done
@@ -288,24 +298,13 @@ function Options(props: Props & { onDone: () => void }) {
           type="button"
           className="cancel"
           disabled={filtersAreDefault(f) && query.wordSet === 'all'}
-          title="Back to 4 syllables, 10 letters, any frequency, all words"
+          title="Remove every limit and use all words"
           onClick={() => {
             props.onFilters(defaultFilters());
             props.onWordSet('all');
           }}
         >
-          Reset
-        </button>
-        <button
-          type="button"
-          className="cancel"
-          title="Remove every limit"
-          onClick={() => {
-            props.onFilters(emptyFilters());
-            props.onWordSet('all');
-          }}
-        >
-          No limits
+          Clear limits
         </button>
       </div>
     </div>

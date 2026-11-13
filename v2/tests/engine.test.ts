@@ -288,11 +288,12 @@ describe('share links', () => {
     expect(decodeState(ds, '#tab=decodable').query.decodable).toBe(true);
     expect(decodeState(ds, '#tab=nonsense').task).toBe('find');
 
-    // Turning every limit off is different from the default limits.
-    const open = defaultState();
-    open.query.filters = emptyQuery().filters;
-    expect(encodeState(ds, open)).toBe('syl=-&let=-');
-    expect(decodeState(ds, '#syl=-&let=-')).toEqual(open);
+    // A list starts with no limits; limits a person sets are written into the link.
+    expect(defaultState().query.filters).toEqual(emptyQuery().filters);
+    const limited = defaultState();
+    limited.query.filters = { ...limited.query.filters, syllablesMax: 4, lettersMax: 10 };
+    expect(encodeState(ds, limited)).toBe('syl=-4&let=-10');
+    expect(decodeState(ds, '#syl=-4&let=-10')).toEqual(limited);
   });
 
   it('gives defaults for an empty or damaged link', () => {
@@ -306,7 +307,7 @@ describe('export', () => {
   it('writes a CSV file and a plain list', () => {
     const idx = [ds.wordIndex.get('cat')!, ds.wordIndex.get('a-bomb')!];
     const csv = resultsToCsv(ds, idx, 'sc');
-    expect(csv.split('\r\n')[0]).toBe('﻿word,sound spellings,syllables,letters,frequency');
+    expect(csv.split('\r\n')[0]).toBe('\uFEFFword,sound spellings,syllables,letters,frequency per million');
     expect(csv.split('\r\n')[1]).toBe('cat,c = /k/  a = /ă/  t = /t/,1,3,95.5');
     expect(csv.split('\r\n')[2]).toBe('a-bomb,a = /ā/  b = /b/  o = /ŏ/  m = /m/  b = / /,2,5,');
     // The file ends with a blank row and the credit line.

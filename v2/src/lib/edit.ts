@@ -123,10 +123,9 @@ export function filterSummary(f: Filters, wordSet: Query['wordSet']): string[] {
   return out;
 }
 
-export const filtersAreDefault = (f: Filters): boolean => {
-  const d = defaultFilters();
-  return (Object.keys(d) as (keyof Filters)[]).every((k) => f[k] === d[k]);
-};
+export const sameFilters = (a: Filters, b: Filters): boolean => (Object.keys(a) as (keyof Filters)[]).every((k) => a[k] === b[k]);
+
+export const filtersAreDefault = (f: Filters): boolean => sameFilters(f, defaultFilters());
 
 /** One sentence that says what the search asks for. Used on printed lists. */
 export function describeQuery(ds: Dataset, q: Query, notation: Notation): string {

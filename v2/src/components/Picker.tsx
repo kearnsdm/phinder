@@ -5,7 +5,7 @@
 // The tabs of the word-list screen reuse this component and narrow it with
 // the optional props (which graphemes to offer, which sounds, the headings).
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { graphemeLabel, phonemeLabel, type Dataset, type Gpc } from '../lib/dataset';
 import { AFFIXES } from '../lib/morph';
 import { PHONEME_GROUPS, type Notation } from '../lib/phonemeMeta';
@@ -102,8 +102,29 @@ export function Picker(props: Props) {
         ? stats.byPhoneme[phoneme].occ
         : 0;
 
-  /** The mode the "or start with a ..." link switches to; undefined when the tab has one mode. */
+  /** The mode the swap control switches to; undefined when this kind of list has one mode. */
   const otherMode = modes.length > 1 ? modes.find((m) => m !== mode) : undefined;
+
+  // Swapping steps 1 and 2: the two grids slide toward each other and fade
+  // ("out"), the mode changes, and the new grids arrive from the far side ("in").
+  const [swap, setSwap] = useState<'idle' | 'out' | 'in'>('idle');
+  const timers = useRef<number[]>([]);
+  useEffect(() => () => timers.current.forEach((t) => window.clearTimeout(t)), []);
+  const swapSteps = () => {
+    if (!otherMode || swap !== 'idle') return;
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+      changeMode(otherMode);
+      return;
+    }
+    setSwap('out');
+    timers.current.push(
+      window.setTimeout(() => {
+        changeMode(otherMode);
+        setSwap('in');
+        timers.current.push(window.setTimeout(() => setSwap('idle'), 280));
+      }, 200),
+    );
+  };
   const changeMode = (m: PickerMode) => {
     setSearch('');
     onMode(m);
@@ -129,19 +150,19 @@ export function Picker(props: Props) {
       {props.closedNote ? (
         <p className="picker-closed">{props.closedNote}</p>
       ) : (
-        <div className="picker-grids">
+        <div className={swap === 'idle' ? 'picker-grids' : `picker-grids swap-${swap}`}>
           {/* ---------------- step 1 ---------------- */}
           <div className="picker-col">
             <h2 className="heading">
               <span className="num">1</span>
-              {heading1}
+              <span className="swap-part">{heading1}</span>
               <button type="button" className="help-icon" title="Help" aria-label="Help" onClick={onHelp}>
                 ?
               </button>
             </h2>
 
             {mode === 'spelling' && (
-              <div className="grid scroll" role="listbox" aria-label={heading1}>
+              <div className="grid scroll swap-part" role="listbox" aria-label={heading1}>
                 {graphemeCells.map((g) => (
                   <button
                     key={g}
@@ -165,7 +186,7 @@ export function Picker(props: Props) {
             )}
 
             {mode === 'sound' && (
-              <div className="grid scroll" role="listbox" aria-label="Phonemes">
+              <div className="grid scroll swap-part" role="listbox" aria-label="Phonemes">
                 {phonemeGroups.map(({ group, items }) => (
                   <div key={group} className="grid-group">
                     <div className="grid-group-label">{group}</div>
@@ -212,12 +233,6 @@ export function Picker(props: Props) {
                 <span className="search-icon" aria-hidden>
                   &#9906;
                 </span>
-                {/* The other way into step 1: pick a sound first, then one of its spellings. */}
-                {otherMode && (
-                  <button type="button" className="link small start-with" onClick={() => changeMode(otherMode)}>
-                    or start with a {MODE_LABEL[otherMode]}
-                  </button>
-                )}
               </div>
             ) : (
               <p className="picker-note">Word parts are found by rule. Check the list before you use it.</p>
@@ -228,11 +243,11 @@ export function Picker(props: Props) {
           <div className="picker-col">
             <h2 className="heading">
               <span className="num">2</span>
-              {heading2}
+              <span className="swap-part">{heading2}</span>
             </h2>
 
             {mode !== 'part' ? (
-              <div className="grid scroll" aria-label={heading2}>
+              <div className="grid scroll swap-part" aria-label={heading2}>
                 {step2.map((g) => {
                   const label = mode === 'spelling' ? phonemeLabel(g.phoneme, notation) : graphemeLabel(g.grapheme) === g.grapheme ? g.grapheme : '#';
                   return (
@@ -268,6 +283,21 @@ export function Picker(props: Props) {
               </button>
             </div>
           </div>
+
+          {/* Swaps steps 1 and 2: start with spellings, or start with sounds. */}
+          {otherMode && (
+            <button
+              type="button"
+              className={mode === 'sound' ? 'swap flipped' : 'swap'}
+              title={`Swap steps 1 and 2: start with a ${MODE_LABEL[otherMode]}`}
+              aria-label={`Swap steps 1 and 2: start with a ${MODE_LABEL[otherMode]}`}
+              onClick={swapSteps}
+            >
+              <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+                <path d="M1 5h11M9 2l3 3-3 3M15 11H4M7 8l-3 3 3 3" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          )}
         </div>
       )}
     </div>

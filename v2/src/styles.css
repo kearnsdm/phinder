@@ -88,7 +88,28 @@ button:disabled { cursor: default; }
 .toggle.on { background: var(--green-dark); color: #fff; }
 .toggle.on:hover { background: #007f4a; }
 
-.picker-grids { display: flex; gap: 32px; }
+.picker-grids { display: flex; gap: 32px; position: relative; }
+
+/* The swap control sits between the headings of steps 1 and 2. */
+.swap {
+  position: absolute; left: 158px; top: -3px; width: 24px; height: 24px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; background: var(--panel); color: var(--green);
+}
+.swap:hover { background: var(--hover); }
+.swap svg { transition: transform 300ms ease; }
+.swap.flipped svg { transform: rotate(180deg); }
+
+/* Crossing: the two grids move toward each other and fade, then the new ones arrive from the far side. */
+.swap-part { transition: transform 200ms ease-in, opacity 200ms ease-in; }
+.picker-grids.swap-out .picker-col:first-child .swap-part { transform: translateX(97px); opacity: 0; }
+.picker-grids.swap-out .picker-col:nth-child(2) .swap-part { transform: translateX(-97px); opacity: 0; }
+.picker-grids.swap-in .picker-col:first-child .swap-part { animation: cross-from-right 280ms ease-out; }
+.picker-grids.swap-in .picker-col:nth-child(2) .swap-part { animation: cross-from-left 280ms ease-out; }
+@keyframes cross-from-right { from { transform: translateX(97px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes cross-from-left { from { transform: translateX(-97px); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .swap-part, .swap svg { transition: none; animation: none; }
+}
 .picker-col { width: 163px; flex: none; }
 
 /* Cells are separated by 1px lines: the grid's own background shows through the gaps. */
@@ -127,7 +148,6 @@ button:disabled { cursor: default; }
 }
 .inputform::placeholder { color: var(--ink); opacity: 0.85; }
 .picker-note { font-family: dinLight; font-size: 12px; line-height: 1.25; margin: 10px 0 0; }
-.start-with { display: block; margin-top: 7px; }
 
 /* A two-way choice drawn as text: the chosen one is underlined in green. */
 .quiet-switch { display: flex; align-items: baseline; gap: 14px; margin-bottom: 10px; }
@@ -365,6 +385,7 @@ button:disabled { cursor: default; }
 footer { text-align: center; margin: 26px 0 18px; }
 footer a { color: var(--ink); text-decoration: none; }
 footer a:hover { text-decoration: underline; }
+.trial { font-family: var(--ink-font); opacity: 0.75; white-space: nowrap; }
 .print-sheet { display: none; }
 
 /* ---- narrow screens: one column ---- */

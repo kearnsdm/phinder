@@ -10,14 +10,15 @@ version (in the repository root) and adds new ways to search.
 | Search | Matching is exact on whole sound spellings. The first version missed words when the same letters first appeared inside a longer grapheme (for example `e = /ĕ/` in "aesthetic"). |
 | Grids | Every grapheme and every phoneme can be reached. The grids scroll when there are more than fit. |
 | Kinds of list | The top line names four kinds of list: "Find Words," "Word Family," "Decodable List," "Word Parts." Each shows only what its task needs. "Find Words" and "Word Parts" share one search; the other two keep their own. The left column itself starts with step 1, as in the first version. |
-| Start with a sound | In "Find Words" and "Decodable List," the link "or start with a sound" under the first grid picks a phoneme first, then one of its spellings. |
+| Start with a sound | In "Find Words" and "Decodable List," a swap button between steps 1 and 2 makes the two grids trade places, with a short crossing animation: pick a phoneme first, then one of its spellings. |
 | Word family | Choose a vowel spelling, then the letters after it (ake), or the letters before a vowel (ca). |
 | Word parts | Prefixes and suffixes. They are found by rule (see `src/lib/morph.ts`), so results need checking. |
 | Join (+) | Joined sound spellings form one unit. A split digraph is written around the next grapheme (`a-e` + `k` = `ake`). Units are labelled "rime" or "body" when they have that shape. |
 | Position | Click a selected sound spelling to require it at the start, in the middle, or at the end of the word. |
 | Or, and not | Under the selection, "+ or one of these" and "+ but none of these" add an OR row and a NOT row. |
 | Decodable list | The tab holds the sound spellings students know. The list shows only words made entirely from them. "+ words must also have" adds sound spellings that every word must contain. |
-| Options | Limits apply at once. The limits in force are shown above the list. A word-set switch keeps only words that have a frequency value. |
+| Options | Lists start with no limits (the first version started with 4 syllables and 10 letters). Limits apply at once, and a line above the list states any limit in force. A word-set switch keeps only words that have a frequency value. |
+| Frequency | Frequencies are per million words, from Fitt (2000), which is also the source of the word list. |
 | Word list | The count follows "Filter Words". Small frequencies are shown (0.31, not blank). The sort choice is kept. |
 | Export | Copy the words, download a spreadsheet file (CSV), print a list, print word cards. |
 | Share | "Copy link" copies an address that reopens the same search. |
@@ -32,7 +33,7 @@ To build the site you need the three source files in `v2/data/raw/`:
 
 | File | Contents |
 | --- | --- |
-| `AmericanWordDataList.txt` | word, frequency, sound spellings, syllables (tab-separated) |
+| `AmericanWordDataList.txt` | word, frequency per million (Fitt, 2000), sound spellings, syllables (tab-separated) |
 | `SoundList.txt` | one sound spelling per line, for example `ea_i_` |
 | `Sound_IPA_List.txt` | phoneme code, five Sound Code characters, three IPA characters (hex) |
 
@@ -82,10 +83,10 @@ To test on a computer without a web server, run:
 npm run build:local
 ```
 
-This writes `phinder2-test.html`, one file with the script, styles, fonts,
+This writes `phinder-trial-N.html` (N is the number in `trial.json`), one file with the script, styles, fonts,
 logo and packed data inside it. Double-click it to open the site. Opening
 `dist/index.html` from disk does not work: browsers do not let a page opened
-from disk load its script and data files. `phinder2-test.html` contains the
+from disk load its script and data files. The file contains the
 word data and is git-ignored.
 
 `npm test` runs the unit tests on a small hand-written word list

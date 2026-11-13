@@ -22,7 +22,7 @@ export const CREDIT = 'Made with Phinder, devinkearns.com';
  * sound symbols correctly, and ends with a blank row and the credit line.
  */
 export function resultsToCsv(ds: Dataset, indexes: number[], notation: Notation): string {
-  const rows = [['word', 'sound spellings', 'syllables', 'letters', 'frequency']];
+  const rows = [['word', 'sound spellings', 'syllables', 'letters', 'frequency per million']];
   for (const i of indexes) {
     rows.push([
       ds.word[i],

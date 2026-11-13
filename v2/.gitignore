@@ -5,4 +5,4 @@ data/raw/
 public/data/
 *.zip
 # The single-file test version contains the word data.
-phinder2-test.html
+phinder-trial-*.html
