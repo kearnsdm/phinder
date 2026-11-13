@@ -49,12 +49,12 @@ export function FamilyBox({ ds, notation, kind, phase, unit, oneSyllable, onKind
         <span className="num">3</span>Word Family
       </h2>
 
-      <div className="control" role="group" aria-label="Kind of word family">
+      <div className="quiet-switch" role="group" aria-label="Kind of word family">
         <span className="mode-label">Words that</span>
-        <button type="button" className={kind === 'rime' ? 'toggle on' : 'toggle'} aria-pressed={kind === 'rime'} onClick={() => onKind('rime')}>
+        <button type="button" className={kind === 'rime' ? 'opt on' : 'opt'} aria-pressed={kind === 'rime'} onClick={() => onKind('rime')}>
           end the same
         </button>
-        <button type="button" className={kind === 'body' ? 'toggle on' : 'toggle'} aria-pressed={kind === 'body'} onClick={() => onKind('body')}>
+        <button type="button" className={kind === 'body' ? 'opt on' : 'opt'} aria-pressed={kind === 'body'} onClick={() => onKind('body')}>
           begin the same
         </button>
       </div>

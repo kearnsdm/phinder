@@ -277,7 +277,7 @@ export function Explore({ ds, stats, morph, query, notation, word, onWord, onBac
               <p className="explore-note decod">
                 <b>Decodability. </b>
                 {known === null
-                  ? 'To check this word against the sound spellings your students know, fill the list on the \u201CDecodable list\u201D tab of the word list screen.'
+                  ? 'To check this word against the sound spellings your students know, fill the list under \u201CDecodable List\u201D in the top line.'
                   : unknown.length === 0
                     ? `Every sound spelling in this word is on your list (${gpcs.length} of ${gpcs.length}).`
                     : `${gpcs.length - unknown.length} of ${gpcs.length} sound spellings are on your list. Not on your list: ${[...new Set(unknown.map((g) => gpcLabel(g, notation)))].join(', ')}.`}

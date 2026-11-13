@@ -46,12 +46,14 @@ button:disabled { cursor: default; }
 .container { max-width: 1170px; margin: 0 auto; padding: 0 15px; }
 
 /* ---- top ---- */
-.top { display: flex; align-items: flex-start; justify-content: space-between; padding: 12px 0 44px; }
+/* The logo has the size and the space under it that it has in the first version. */
+.top { display: flex; align-items: flex-start; justify-content: space-between; padding: 0 0 64px; }
 .brand { display: flex; align-items: flex-end; gap: 14px; }
-.logo { display: block; width: 130px; height: auto; margin: 12px 0 0 -6px; }
-.byline { font-family: dinMedium; font-size: 14px; color: var(--ink); text-decoration: none; padding-bottom: 2px; white-space: nowrap; }
+.logo { display: block; width: 106px; height: auto; margin: 14px 0 0 8px; }
+.byline { font-family: dinMedium; font-size: 12.5px; color: var(--ink); text-decoration: none; padding-bottom: 0; white-space: nowrap; }
 .byline:hover { text-decoration: underline; }
-.views { display: flex; gap: 22px; padding-top: 18px; font-family: dinMedium; }
+.views { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px 24px; padding-top: 24px; font-family: dinMedium; }
+.views .link { font-family: dinMedium; padding-bottom: 2px; border-bottom: 2px solid transparent; }
 .views .link.on { border-bottom: 2px solid var(--green); }
 .views .link:hover:not(:disabled) { text-decoration: none; }
 
@@ -61,7 +63,8 @@ button:disabled { cursor: default; }
 .link.small { font-size: 92%; }
 .link.small.on { font-family: dinBold; color: var(--ink-hover); }
 
-.heading { font-family: din; font-size: 14px; font-weight: bold; margin: 0 0 4px; display: flex; align-items: center; color: var(--green); }
+/* 19px from a heading to its grid, as in the first version. */
+.heading { font-family: din; font-size: 14px; font-weight: bold; line-height: 19px; min-height: 19px; margin: 0; display: flex; align-items: center; color: var(--green); }
 .heading .num { font-size: 120%; width: 29px; flex: none; }
 .help-icon {
   margin-left: 8px; width: 15px; height: 15px; border-radius: 50%; background: var(--green); color: #fff;
@@ -71,17 +74,8 @@ button:disabled { cursor: default; }
 
 /* ---- layout ---- */
 .main { display: grid; grid-template-columns: 390px minmax(0, 1fr); column-gap: 0; align-items: start; }
-.left { padding-right: 30px; min-height: 560px; display: flex; flex-direction: column; }
-
-/* ---- tabs: what the person wants to find ---- */
-.tabs { display: flex; margin-bottom: 16px; width: 358px; max-width: 100%; }
-.tab {
-  flex: 1 1 auto; height: 34px; padding: 0 6px; font-family: dinMedium; font-size: 14px; white-space: nowrap;
-  color: var(--green-dark); background: var(--panel); border-bottom: 3px solid transparent;
-}
-.tab:hover { background: var(--hover); }
-.tab.on { background: var(--green-dark); color: #fff; }
-.tab.on:hover { background: #007f4a; }
+/* 513px puts "Search for Words" where the first version has it. */
+.left { padding-right: 30px; min-height: 513px; display: flex; flex-direction: column; }
 
 /* ---- step 1 and 2: the grids ---- */
 .mode-switch, .control { display: flex; align-items: center; margin-bottom: 14px; }
@@ -133,6 +127,14 @@ button:disabled { cursor: default; }
 }
 .inputform::placeholder { color: var(--ink); opacity: 0.85; }
 .picker-note { font-family: dinLight; font-size: 12px; line-height: 1.25; margin: 10px 0 0; }
+.start-with { display: block; margin-top: 7px; }
+
+/* A two-way choice drawn as text: the chosen one is underlined in green. */
+.quiet-switch { display: flex; align-items: baseline; gap: 14px; margin-bottom: 10px; }
+.quiet-switch .mode-label { margin-right: 0; }
+.quiet-switch .opt { font-family: var(--ink-font); color: var(--ink); padding-bottom: 1px; border-bottom: 2px solid transparent; }
+.quiet-switch .opt:hover { color: var(--ink-hover); }
+.quiet-switch .opt.on { font-family: dinMedium; border-bottom-color: var(--green); }
 
 .notation { display: flex; margin-top: 20px; }
 .notation .toggle { height: 35px; flex: 1; padding: 0; font-size: 14px; }
@@ -367,7 +369,8 @@ footer a:hover { text-decoration: underline; }
 
 /* ---- narrow screens: one column ---- */
 @media (max-width: 899px) {
-  .top { padding-bottom: 20px; }
+  .top { flex-wrap: wrap; padding-bottom: 26px; }
+  .views { justify-content: flex-start; width: 100%; padding-top: 16px; }
   .main { grid-template-columns: minmax(0, 1fr); row-gap: 34px; }
   .left { padding-right: 0; min-height: 0; }
   .search-row { margin-top: 20px; flex-wrap: wrap; }

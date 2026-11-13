@@ -16,9 +16,9 @@ export function Help({ onClose }: { onClose: () => void }) {
           &#10006;
         </button>
         <h2>How to use Phinder</h2>
-        <p>The four tabs above the grids are four kinds of word list. Each tab keeps its own list.</p>
+        <p>The top line names four kinds of word list. Each one keeps its own list while you look at the others.</p>
 
-        <h3>Find words</h3>
+        <h3>Find Words</h3>
         <ol>
           <li>
             <b>Graphemes.</b> Click a letter pattern. Type in &ldquo;Search Letter Pattern&rdquo; to find others, or click &ldquo;&hellip;&rdquo; to see all of them.
@@ -35,7 +35,7 @@ export function Help({ onClose }: { onClose: () => void }) {
         </ol>
         <ul>
           <li>
-            <b>Start with a sound.</b> Choose &ldquo;Sound&rdquo; beside &ldquo;Start with&rdquo; to pick a sound first and then one of its spellings.
+            <b>Start with a sound.</b> Click &ldquo;or start with a sound&rdquo; under the first grid to pick a sound first and then one of its spellings.
           </li>
           <li>
             <b>Or, and not.</b> Under your selection, &ldquo;+ or one of these&rdquo; adds a row of alternatives, and &ldquo;+ but none of these&rdquo; adds a row of sound spellings to
@@ -49,19 +49,19 @@ export function Help({ onClose }: { onClose: () => void }) {
           </li>
         </ul>
 
-        <h3>Word family</h3>
+        <h3>Word Family</h3>
         <p>
           Choose a vowel spelling and its sound, then the letters after it. For example, a-e and then k lists &ldquo;make,&rdquo; &ldquo;take&rdquo; and &ldquo;lake.&rdquo; Choose
           &ldquo;begin the same&rdquo; to list words such as &ldquo;cat,&rdquo; &ldquo;can&rdquo; and &ldquo;cap.&rdquo;
         </p>
 
-        <h3>Decodable list</h3>
+        <h3>Decodable List</h3>
         <p>
           Choose the sound spellings your students know: click a letter, then its sound. The list shows only words in which every sound spelling is known. For example, with a, i, m,
           n, p, s and t the list has &ldquo;map,&rdquo; &ldquo;pin&rdquo; and &ldquo;spit,&rdquo; and not &ldquo;ship.&rdquo;
         </p>
 
-        <h3>Word parts</h3>
+        <h3>Word Parts</h3>
         <p>Choose a prefix or a suffix. Word parts are found by rule, so check the list before you use it.</p>
 
         <h3>For every list</h3>

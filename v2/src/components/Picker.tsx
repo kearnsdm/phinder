@@ -17,14 +17,14 @@ export type PickerMode = 'spelling' | 'sound' | 'part';
 export const DEFAULT_PATTERNS = ['a', 'ar', 'ck', 'e', 'ea', 'ee', 'igh', 'i-e', 'k', 'm', 'oa', 'ow', 'qu', 'x', 'y'];
 const MIN_CELLS = 12; // the second grid always shows at least 3 rows of 4, as before
 
-const MODE_LABEL: Record<PickerMode, string> = { spelling: 'Spelling', sound: 'Sound', part: 'Word part' };
+const MODE_LABEL: Record<PickerMode, string> = { spelling: 'spelling', sound: 'sound', part: 'word part' };
 
 interface Props {
   ds: Dataset;
   stats: Stats;
   notation: Notation;
   mode: PickerMode;
-  /** The choices in the "Start with" switch. With fewer than two, the switch is not shown. */
+  /** The ways into step 1 that this tab offers. With two, a link under the first grid switches between them. */
   modes: PickerMode[];
   onMode: (m: PickerMode) => void;
   onNotation: (n: Notation) => void;
@@ -102,6 +102,8 @@ export function Picker(props: Props) {
         ? stats.byPhoneme[phoneme].occ
         : 0;
 
+  /** The mode the "or start with a ..." link switches to; undefined when the tab has one mode. */
+  const otherMode = modes.length > 1 ? modes.find((m) => m !== mode) : undefined;
   const changeMode = (m: PickerMode) => {
     setSearch('');
     onMode(m);
@@ -124,17 +126,6 @@ export function Picker(props: Props) {
 
   return (
     <div className="picker">
-      {modes.length > 1 && (
-        <div className="mode-switch" role="group" aria-label="Start with">
-          <span className="mode-label">Start with</span>
-          {modes.map((m) => (
-            <button key={m} type="button" className={mode === m ? 'toggle on' : 'toggle'} aria-pressed={mode === m} onClick={() => changeMode(m)}>
-              {MODE_LABEL[m]}
-            </button>
-          ))}
-        </div>
-      )}
-
       {props.closedNote ? (
         <p className="picker-closed">{props.closedNote}</p>
       ) : (
@@ -221,6 +212,12 @@ export function Picker(props: Props) {
                 <span className="search-icon" aria-hidden>
                   &#9906;
                 </span>
+                {/* The other way into step 1: pick a sound first, then one of its spellings. */}
+                {otherMode && (
+                  <button type="button" className="link small start-with" onClick={() => changeMode(otherMode)}>
+                    or start with a {MODE_LABEL[otherMode]}
+                  </button>
+                )}
               </div>
             ) : (
               <p className="picker-note">Word parts are found by rule. Check the list before you use it.</p>

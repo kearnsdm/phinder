@@ -35,10 +35,10 @@ const LOGO = inlineAssets().logo ?? `${import.meta.env.BASE_URL}logo.png`;
 const SITE = 'https://www.devinkearns.com/';
 
 const TABS: [Task, string][] = [
-  ['find', 'Find words'],
-  ['family', 'Word family'],
-  ['decodable', 'Decodable list'],
-  ['parts', 'Word parts'],
+  ['find', 'Find Words'],
+  ['family', 'Word Family'],
+  ['decodable', 'Decodable List'],
+  ['parts', 'Word Parts'],
 ];
 
 /**
@@ -221,7 +221,7 @@ export function App() {
   if (!ds || !morph || !stats || !familyLists) {
     return (
       <div className="container">
-        <img className="logo" src={LOGO} alt="Phinder" width={130} height={80} />
+        <img className="logo" src={LOGO} alt="Phinder" width={106} height={65} />
         <p className="load-note">Loading the word list&hellip;</p>
       </div>
     );
@@ -230,6 +230,7 @@ export function App() {
   // ---- tabs ----
   /** Shows a tab. `withQuery` replaces that tab's search (used by Explore a Word). */
   const openTab = (next: Task, withQuery?: Query) => {
+    if (!withQuery && next === task && state.view === 'find') return;
     const from = slotOf(task);
     const to = slotOf(next);
     if (from !== to) stash.current[from] = query;
@@ -359,16 +360,27 @@ export function App() {
     <div className="container">
       <header className="top">
         <div className="brand">
-          <img className="logo" src={LOGO} alt="Phinder" width={130} height={80} />
+          <img className="logo" src={LOGO} alt="Phinder" width={106} height={65} />
           <a className="byline" href={SITE} target="_blank" rel="noopener">
             by Devin Kearns, Ph.D.
           </a>
         </div>
-        <nav className="views" aria-label="Screens">
-          <button type="button" className={state.view === 'find' ? 'link on' : 'link'} onClick={showList}>
-            Word List
-          </button>
-          <button type="button" className={state.view === 'explore' ? 'link on' : 'link'} onClick={() => setState((s) => ({ ...s, view: 'explore' }))}>
+        {/* The top line: four kinds of word list, and the single-word screen. */}
+        <nav className="views" aria-label="Kinds of word list">
+          {TABS.map(([t, label]) => {
+            const on = state.view === 'find' && task === t;
+            return (
+              <button key={t} type="button" className={on ? 'link on' : 'link'} aria-current={on ? 'page' : undefined} onClick={() => openTab(t)}>
+                {label}
+              </button>
+            );
+          })}
+          <button
+            type="button"
+            className={state.view === 'explore' ? 'link on' : 'link'}
+            aria-current={state.view === 'explore' ? 'page' : undefined}
+            onClick={() => setState((s) => ({ ...s, view: 'explore' }))}
+          >
             Explore a Word
           </button>
         </nav>
@@ -377,14 +389,6 @@ export function App() {
       {state.view === 'find' ? (
         <div className="main">
           <div className="left">
-            <div className="tabs" role="tablist" aria-label="What do you want to find?">
-              {TABS.map(([t, label]) => (
-                <button key={t} type="button" role="tab" aria-selected={task === t} className={task === t ? 'tab on' : 'tab'} onClick={() => openTab(t)}>
-                  {label}
-                </button>
-              ))}
-            </div>
-
             {task === 'family' ? (
               <Picker
                 key={`family-${kind}-${phase}`}

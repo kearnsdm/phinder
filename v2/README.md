@@ -9,8 +9,8 @@ version (in the repository root) and adds new ways to search.
 | --- | --- |
 | Search | Matching is exact on whole sound spellings. The first version missed words when the same letters first appeared inside a longer grapheme (for example `e = /ĕ/` in "aesthetic"). |
 | Grids | Every grapheme and every phoneme can be reached. The grids scroll when there are more than fit. |
-| Tabs | Four tabs above the grids, one for each kind of list: "Find words," "Word family," "Decodable list," "Word parts." Each tab shows only what its task needs. "Find words" and "Word parts" share one search; the other two keep their own. |
-| Start with a sound | In "Find words" and "Decodable list," "Start with: Sound" picks a phoneme first, then one of its spellings. |
+| Kinds of list | The top line names four kinds of list: "Find Words," "Word Family," "Decodable List," "Word Parts." Each shows only what its task needs. "Find Words" and "Word Parts" share one search; the other two keep their own. The left column itself starts with step 1, as in the first version. |
+| Start with a sound | In "Find Words" and "Decodable List," the link "or start with a sound" under the first grid picks a phoneme first, then one of its spellings. |
 | Word family | Choose a vowel spelling, then the letters after it (ake), or the letters before a vowel (ca). |
 | Word parts | Prefixes and suffixes. They are found by rule (see `src/lib/morph.ts`), so results need checking. |
 | Join (+) | Joined sound spellings form one unit. A split digraph is written around the next grapheme (`a-e` + `k` = `ake`). Units are labelled "rime" or "body" when they have that shape. |
