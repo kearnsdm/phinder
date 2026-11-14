@@ -35,6 +35,50 @@ export function allowedGpcs(q: Query): Set<number> {
   return allowed;
 }
 
+type Limits = Pick<Query, 'wordSet' | 'filters' | 'shape'>;
+
+/** The tests that do not depend on what was selected: the word set, the limits in Options, and the word shape. */
+export function limitsTest(ds: Dataset, q: Limits): (i: number) => boolean {
+  const f = q.filters;
+  const freqOnly = q.wordSet === 'freq' || f.frequencyMin !== null || f.frequencyMax !== null;
+  return (i) => {
+    const freq = ds.freq[i];
+    if (freqOnly && Number.isNaN(freq)) return false;
+    if (f.frequencyMin !== null && freq < f.frequencyMin) return false;
+    if (f.frequencyMax !== null && freq > f.frequencyMax) return false;
+    const syl = ds.syllables[i];
+    if (f.syllablesMin !== null && syl < f.syllablesMin) return false;
+    if (f.syllablesMax !== null && syl > f.syllablesMax) return false;
+    const len = ds.letters[i];
+    if (f.lettersMin !== null && len < f.lettersMin) return false;
+    if (f.lettersMax !== null && len > f.lettersMax) return false;
+    return q.shape === null || wordShape(ds, i) === q.shape;
+  };
+}
+
+/**
+ * For each sound spelling, the number of words within the limits that
+ * contain it. The grids use it to leave out sound spellings that would give
+ * an empty list.
+ */
+export function wordsPerGpc(ds: Dataset, q: Limits): Uint32Array {
+  const counts = new Uint32Array(ds.gpcs.length);
+  const lastSeen = new Int32Array(ds.gpcs.length).fill(-1);
+  const withinLimits = limitsTest(ds, q);
+  for (let i = 0; i < ds.n; i++) {
+    if (!withinLimits(i)) continue;
+    const seq = ds.seq[i];
+    for (let k = 0; k < seq.length; k++) {
+      const id = seq.charCodeAt(k) - ds.charBase;
+      if (lastSeen[id] !== i) {
+        lastSeen[id] = i;
+        counts[id]++;
+      }
+    }
+  }
+  return counts;
+}
+
 /** Returns the indexes of matching words, in word-list order. */
 export function search(ds: Dataset, q: Query, morph: Morph | null = null): number[] {
   if (!hasCriteria(q)) return [];
@@ -49,23 +93,11 @@ export function search(ds: Dataset, q: Query, morph: Morph | null = null): numbe
     for (const id of allowedGpcs(q)) allowed[id] = 1;
   }
 
-  const f = q.filters;
-  const freqOnly = q.wordSet === 'freq' || f.frequencyMin !== null || f.frequencyMax !== null;
+  const withinLimits = limitsTest(ds, q);
   const out: number[] = [];
 
   words: for (let i = 0; i < ds.n; i++) {
-    const freq = ds.freq[i];
-    if (freqOnly && Number.isNaN(freq)) continue;
-    if (f.frequencyMin !== null && freq < f.frequencyMin) continue;
-    if (f.frequencyMax !== null && freq > f.frequencyMax) continue;
-    const syl = ds.syllables[i];
-    if (f.syllablesMin !== null && syl < f.syllablesMin) continue;
-    if (f.syllablesMax !== null && syl > f.syllablesMax) continue;
-    const len = ds.letters[i];
-    if (f.lettersMin !== null && len < f.lettersMin) continue;
-    if (f.lettersMax !== null && len > f.lettersMax) continue;
-
-    if (q.shape !== null && wordShape(ds, i) !== q.shape) continue;
+    if (!withinLimits(i)) continue;
 
     const seq = ds.seq[i];
     for (const test of all) if (!test(i, seq)) continue words;

@@ -5,7 +5,7 @@ import { formatFrequency, gpcsOf, gpcLabel, unpack, wordShape } from '../src/lib
 import { resultsToCsv, resultsToText } from '../src/lib/export';
 import { Morph, affixById, alignLetters } from '../src/lib/morph';
 import { emptyQuery, type Criterion, type Query } from '../src/lib/query';
-import { allowedGpcs, matchedPositions, search, sortResults } from '../src/lib/search';
+import { allowedGpcs, matchedPositions, search, sortResults, wordsPerGpc } from '../src/lib/search';
 import { computeStats, readingConsistency, spellingConsistency } from '../src/lib/stats';
 import { bodyRime, unitLabel, unitShape, unitSpelling } from '../src/lib/units';
 import { decodeState, defaultState, encodeState } from '../src/lib/urlState';
@@ -50,7 +50,7 @@ describe('data loading', () => {
   it('applies the display corrections and labels silent letters', () => {
     expect(gpcLabel(ds.gpcByKey.get('or_Or')!, 'sc')).toBe('or = /or/');
     expect(gpcLabel(ds.gpcByKey.get("n'_@n")!, 'sc')).toBe("n' = /ən/");
-    expect(gpcLabel(ds.gpcByKey.get('g_#')!, 'sc')).toBe('g = / /');
+    expect(gpcLabel(ds.gpcByKey.get('g_#')!, 'sc')).toBe('g = silent');
     expect(gpcLabel(ds.gpcByKey.get('th_T')!, 'ipa')).toBe('th = /θ/');
   });
 
@@ -157,6 +157,20 @@ describe('search', () => {
     expect(names('freq-asc')).toEqual(['mat', 'map', 'making', 'man', 'make', 'a-bomb']);
     expect(names('alpha-desc')[0]).toBe('mat');
     expect(names('length-asc').slice(0, 3)).toEqual(['man', 'map', 'mat']);
+  });
+
+  it('counts the words for each sound spelling within the limits and the word shape', () => {
+    const q = emptyQuery();
+    const [sh, ea, kn] = ids(ds, 'sh_S', 'ea_i', 'kn_n');
+    const all = wordsPerGpc(ds, q);
+    expect([all[sh], all[ea], all[kn]]).toEqual([1, 1, 1]);
+    // "read" has 4 letters; with a limit of 3 letters, ea = /ē/ has no word left.
+    const short = wordsPerGpc(ds, { ...q, filters: { ...q.filters, lettersMax: 3 } });
+    expect(short[ea]).toBe(0);
+    // "ship" is CVC; "known" is CVC too; with the shape CCVC neither sound spelling has a word.
+    const ccvc = wordsPerGpc(ds, { ...q, shape: 'CCVC' });
+    expect([ccvc[sh], ccvc[kn]]).toEqual([0, 0]);
+    expect(wordsPerGpc(ds, { ...q, shape: 'CVC' })[sh]).toBe(1);
   });
 
   it('reports which sound spellings matched, for highlighting', () => {
@@ -337,7 +351,7 @@ describe('export', () => {
     const csv = resultsToCsv(ds, idx, 'sc');
     expect(csv.split('\r\n')[0]).toBe('\uFEFFword,sound spellings,syllables,letters,frequency per million');
     expect(csv.split('\r\n')[1]).toBe('cat,c = /k/  a = /ă/  t = /t/,1,3,95.5');
-    expect(csv.split('\r\n')[2]).toBe('a-bomb,a = /ā/  b = /b/  o = /ŏ/  m = /m/  b = / /,2,5,');
+    expect(csv.split('\r\n')[2]).toBe('a-bomb,a = /ā/  b = /b/  o = /ŏ/  m = /m/  b = silent,2,5,');
     // The file ends with a blank row and the credit line.
     expect(csv.split('\r\n').slice(3)).toEqual(['', '"Made with Phinder, devinkearns.com"', '']);
     expect(resultsToText(ds, idx)).toBe('cat\na-bomb');

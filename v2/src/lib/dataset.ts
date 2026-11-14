@@ -236,9 +236,11 @@ export const seqOf = (ds: Dataset, ids: number[]): string => ids.map((id) => ds.
 
 export const phonemeText = (p: Phoneme, notation: Notation): string => (notation === 'ipa' ? p.ipa : p.sc) || p.code;
 
-/** "/ā/". A silent letter is "/ /", as in the first version of Phinder. */
-export const phonemeLabel = (p: Phoneme, notation: Notation): string =>
-  p.silent ? '/ /' : `/${phonemeText(p, notation)}/`;
+/** The first version of Phinder wrote a silent letter as "/ /". */
+export const SILENT = 'silent';
+
+/** "/ā/", or "silent" for a letter with no sound. */
+export const phonemeLabel = (p: Phoneme, notation: Notation): string => (p.silent ? SILENT : `/${phonemeText(p, notation)}/`);
 
 /** Grapheme "#" in the data marks a sound that has no letter of its own. */
 export const graphemeLabel = (grapheme: string): string => (grapheme === '#' ? '(no letter)' : grapheme);

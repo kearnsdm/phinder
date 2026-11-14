@@ -8,10 +8,12 @@ version (in the repository root) and adds new ways to search.
 | Area | Change |
 | --- | --- |
 | Search | Matching is exact on whole sound spellings. The first version missed words when the same letters first appeared inside a longer grapheme (for example `e = /ĕ/` in "aesthetic"). |
-| Grids | Every grapheme and every phoneme can be reached. The grids scroll when there are more than fit. |
+| Grids | The grids scroll when there are more than fit. They leave out two groups of sound spellings: those with no word within the limits and word shape now set, and the very rare ones (one or two words in the whole list; `RARE_MAX_WORDS` in `src/lib/stats.ts`). "Include very rare sound spellings" on the Advanced Search page brings the rare ones back. |
+| Silent letters | A letter with no sound is written "silent" (the first version wrote "/ /"). |
 | Pages | The top line names the pages: "Spelling to Sound," "Sound to Spelling," "Decodable Words," "Advanced Search," and "Word Explorer." Each keeps its own search. The left column of every page starts with step 1, as in the first version. |
 | Spelling to Sound | The first version's screen: graphemes, phonemes, the selection (AND), the word list. "Prefix" and "Suffix" menus under the grids add a word part to the selection. Word parts are found by rule (see `src/lib/morph.ts`), so results need checking. |
 | Sound to Spelling | The same steps the other way round: pick a phoneme first, then one of its spellings. |
+| Search for Words | The word list changes only when the person clicks "Search for Words", as in the first version. Choosing or removing a sound spelling changes step 3 only, so the person decides which sound spellings to keep before the list changes. A line above the list says when step 3 and the list differ. Limits in Options, the sort order and links still apply at once. |
 | Advanced Search | Every other way to select words: OR and NOT rows, join (+), place in the word, word shape, word parts, and a swap button that makes the two grids trade places. |
 | Join (+) | On the Advanced Search page. Joined sound spellings form one unit. A split digraph is written around the next grapheme (`a-e` + `k` = `ake`). Units are labelled "rime" or "body" when they have that shape. |
 | Word shape | On the Advanced Search page. CVC, CCVC, CVCC, CCVCC, CVCe, CCVCe, VCe, CV, VC. C is one consonant sound spelling, V is one vowel sound spelling, and e is the final e of a vowel-consonant-e pattern, whatever the vowel sound (make, have, some, ache). See `wordShape` in `src/lib/dataset.ts`. |

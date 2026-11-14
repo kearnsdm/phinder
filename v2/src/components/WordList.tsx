@@ -24,7 +24,9 @@ interface Props {
   /** Sorted matches (word indexes), before "Filter Words" is applied. */
   results: number[];
   totalWords: number;
-  /** What to say when nothing has been chosen yet. */
+  /** Step 3 has changed since the last "Search for Words", so this list shows the search before the change. */
+  pending: boolean;
+  /** What to say when nothing has been searched for yet. */
   emptyHint: string;
   /** The limits this kind of list starts with. The line above the list appears only when the limits differ from these. */
   startFilters: Filters;
@@ -111,6 +113,11 @@ export function WordList(props: Props) {
                 <button type="button" className="link small" onClick={() => setOptionsOpen(true)}>
                   Change
                 </button>
+              </div>
+            )}
+            {props.pending && searching && (
+              <div className="limits pending" role="status">
+                Step 3 has changed. Click &ldquo;Search for Words&rdquo; to update this list.
               </div>
             )}
             <div className="list" tabIndex={0}>

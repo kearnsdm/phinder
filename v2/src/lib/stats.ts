@@ -8,6 +8,9 @@
 import type { Dataset } from './dataset';
 
 export type WordSet = 'all' | 'freq';
+
+/** A sound spelling found in this many words or fewer is "very rare": the grids leave it out unless asked. */
+export const RARE_MAX_WORDS = 2;
 export type Weight = 'words' | 'freq';
 
 interface Total {

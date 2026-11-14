@@ -5,7 +5,7 @@
 // headings. Pages that offer word parts get "Prefix" and "Suffix" menus
 // under the grids.
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { graphemeLabel, phonemeLabel, type Dataset, type Gpc } from '../lib/dataset';
 import { AFFIXES } from '../lib/morph';
 import { PHONEME_GROUPS, type Notation } from '../lib/phonemeMeta';
@@ -32,19 +32,31 @@ interface Props {
   onHelp: () => void;
   /** Graphemes shown in grid 1 before "…" is clicked. Default: the first Phinder's grid. */
   shortList?: string[];
+  /**
+   * Sound spellings the grids leave out: the very rare ones, and those with
+   * no word within the limits and word shape now set.
+   */
+  hidden: (gpcId: number) => boolean;
 }
 
 const percent = (part: number, whole: number) => (whole > 0 ? `${Math.round((100 * part) / whole)}%` : '');
 
 export function Picker(props: Props) {
-  const { ds, stats, notation, mode, modes, onMode, onNotation, onPickGpc, onPickAffix, onHelp } = props;
+  const { ds, stats, notation, mode, modes, onMode, onNotation, onPickGpc, onPickAffix, onHelp, hidden } = props;
   const [search, setSearch] = useState('');
   const [showAll, setShowAll] = useState(false);
   const [grapheme, setGrapheme] = useState<string | null>(null);
   const [phoneme, setPhoneme] = useState<number | null>(null);
 
   const shortList = props.shortList ?? DEFAULT_PATTERNS;
-  const allGraphemes = useMemo(() => [...stats.byGrapheme.keys()].sort(), [stats]);
+  const allGraphemes = useMemo(
+    () =>
+      [...stats.byGrapheme.entries()]
+        .filter(([, total]) => total.gpcs.some((id) => !hidden(id)))
+        .map(([grapheme]) => grapheme)
+        .sort(),
+    [stats, hidden],
+  );
 
   const graphemeCells = useMemo(() => {
     const text = search.trim().toLowerCase();
@@ -55,6 +67,19 @@ export function Picker(props: Props) {
     return showAll ? allGraphemes : shortList.filter((g) => allGraphemes.includes(g));
   }, [search, showAll, allGraphemes, shortList]);
 
+  // The data has more than one code for a letter with no sound. The phoneme
+  // grid shows one "silent" cell for all of them.
+  const silent = useMemo(() => {
+    const codes = ds.phonemes.filter((p) => p.silent && stats.byPhoneme[p.index].gpcs.length > 0);
+    return {
+      cell: codes.length ? codes[0].index : -1,
+      gpcs: codes.flatMap((p) => stats.byPhoneme[p.index].gpcs).sort((a, b) => stats.occ[b] - stats.occ[a]),
+      occ: codes.reduce((sum, p) => sum + stats.byPhoneme[p.index].occ, 0),
+    };
+  }, [ds, stats]);
+  /** The sound spellings of one cell of the phoneme grid. */
+  const spellingsOf = useCallback((index: number) => (index === silent.cell ? silent.gpcs : stats.byPhoneme[index].gpcs), [silent, stats]);
+
   const phonemeGroups = useMemo(() => {
     const text = search.trim().toLowerCase();
     return PHONEME_GROUPS.map((group) => ({
@@ -62,23 +87,29 @@ export function Picker(props: Props) {
       items: ds.phonemes.filter(
         (p) =>
           p.group === group &&
-          stats.byPhoneme[p.index].occ > 0 &&
+          (!p.silent || p.index === silent.cell) &&
+          spellingsOf(p.index).some((id) => !hidden(id)) &&
           (!text || phonemeLabel(p, notation).toLowerCase().includes(text)),
       ),
     })).filter((g) => g.items.length > 0);
-  }, [ds, stats, search, notation]);
+  }, [ds, silent, spellingsOf, search, notation, hidden]);
 
   // Step 2 cells: the sound spellings for the grapheme or phoneme chosen in step 1.
-  const step2: Gpc[] =
+  const step2: Gpc[] = (
+    mode === 'spelling' ? (grapheme ? (stats.byGrapheme.get(grapheme)?.gpcs ?? []) : []) : phoneme !== null ? spellingsOf(phoneme) : []
+  )
+    .filter((id) => !hidden(id))
+    .map((id) => ds.gpcs[id]);
+  const step2Total =
     mode === 'spelling'
       ? grapheme
-        ? (stats.byGrapheme.get(grapheme)?.gpcs ?? []).map((id) => ds.gpcs[id])
-        : []
-      : phoneme !== null
-        ? stats.byPhoneme[phoneme].gpcs.map((id) => ds.gpcs[id])
-        : [];
-  const step2Total =
-    mode === 'spelling' ? (grapheme ? (stats.byGrapheme.get(grapheme)?.occ ?? 0) : 0) : phoneme !== null ? stats.byPhoneme[phoneme].occ : 0;
+        ? (stats.byGrapheme.get(grapheme)?.occ ?? 0)
+        : 0
+      : phoneme === null
+        ? 0
+        : phoneme === silent.cell
+          ? silent.occ
+          : stats.byPhoneme[phoneme].occ;
 
   /** The mode the swap button switches to; undefined when this page has one mode. */
   const otherMode = modes.length > 1 ? modes.find((m) => m !== mode) : undefined;
@@ -181,7 +212,7 @@ export function Picker(props: Props) {
                       role="option"
                       aria-selected={phoneme === p.index}
                       className={`${phoneme === p.index ? 'cell picked' : 'cell'} sound${phonemeLabel(p, notation).length > 5 ? ' long' : ''}`}
-                      title={`${stats.byPhoneme[p.index].gpcs.length} spellings`}
+                      title={`${spellingsOf(p.index).filter((id) => !hidden(id)).length} spellings`}
                       onClick={() => setPhoneme(p.index)}
                     >
                       {phonemeLabel(p, notation)}

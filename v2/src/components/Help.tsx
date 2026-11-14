@@ -30,7 +30,10 @@ export function Help({ onClose }: { onClose: () => void }) {
             <b>Sound Spellings Selected.</b> Each choice appears here. Words must have all of them. Click &#10006; to remove one.
           </li>
           <li>
-            <b>Word List.</b> The list updates as you choose. Click a word to explore it.
+            <b>Search for Words.</b> Click this button to make the list. The list changes only when you click it, so you can add and remove sound spellings first.
+          </li>
+          <li>
+            <b>Word List.</b> Click a word to explore it. &ldquo;Options&rdquo; sets limits on syllables, letters and frequency; limits apply at once.
           </li>
         </ol>
         <p>
@@ -67,6 +70,10 @@ export function Help({ onClose }: { onClose: () => void }) {
           <li>
             <b>Start with a sound.</b> The round button with two arrows between steps 1 and 2 makes the two grids trade places.
           </li>
+          <li>
+            <b>Very rare sound spellings.</b> The grids leave out sound spellings found in only one or two words. Check &ldquo;Include very rare sound spellings&rdquo; to see
+            them.
+          </li>
         </ul>
 
         <h3>For every list</h3>
@@ -78,7 +85,10 @@ export function Help({ onClose }: { onClose: () => void }) {
             <b>Frequency.</b> The number beside a word is its frequency per million words (Fitt, 2000).
           </li>
           <li>
-            <b>Sound Code or IPA.</b> Changes how sounds are written.
+            <b>Sound Code or IPA.</b> Changes how sounds are written. A letter with no sound is marked &ldquo;silent.&rdquo;
+          </li>
+          <li>
+            <b>What the grids show.</b> A grid shows only the sound spellings that have at least one word within the limits you set in Options.
           </li>
           <li>
             <b>Save or share.</b> &ldquo;Copy link&rdquo; copies an address that reopens this exact list. Under the list you can copy the words, get a spreadsheet file, or print a list

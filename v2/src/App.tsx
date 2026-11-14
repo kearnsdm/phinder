@@ -24,8 +24,8 @@ import {
 import { resultsToCsv, resultsToText } from './lib/export';
 import { Morph } from './lib/morph';
 import { defaultFilters, emptyQuery, hasCriteria, SHAPES, type Criterion, type Query } from './lib/query';
-import { search, sortResults } from './lib/search';
-import { computeStats } from './lib/stats';
+import { search, sortResults, wordsPerGpc } from './lib/search';
+import { computeStats, RARE_MAX_WORDS } from './lib/stats';
 import { decodeState, defaultState, encodeState, type AppState, type Task } from './lib/urlState';
 
 type Alert = { kind: 'ok' | 'bad'; text: string; id: number };
@@ -58,6 +58,9 @@ const startQueries = (): Record<Task, Query> => ({
 });
 
 const LETTERS = 'abcdefghijklmnopqrstuvwxyz'.split('');
+
+/** The part of a search that "Search for Words" sends to the word list: everything except the limits in Options. */
+const selectionOf = (q: Query) => JSON.stringify([q.all, q.any, q.none, q.shape, q.decodable, q.taught]);
 
 async function copyText(text: string): Promise<boolean> {
   try {
@@ -92,9 +95,19 @@ export function App() {
   const [state, setState] = useState<AppState>(defaultState);
   /** The searches of the pages that are not showing. */
   const stash = useRef<Record<Task, Query>>(startQueries());
+  /**
+   * What the word list of each page shows: the selection as it stood when
+   * the person last clicked "Search for Words". Choosing or removing a sound
+   * spelling changes step 3 only; the list waits for the button, as in the
+   * first Phinder (Devin, Nov 14, 2026). The person can then decide which
+   * sound spellings to keep before the list changes.
+   */
+  const [searched, setSearched] = useState<Record<Task, Query>>(startQueries);
   const [activeRow, setActiveRow] = useState<Row>('all');
   const [openRows, setOpenRows] = useState<Row[]>([]);
   const [advancedMode, setAdvancedMode] = useState<PickerMode>('spelling');
+  /** Advanced Search only: also offer the sound spellings found in one or two words. */
+  const [includeRare, setIncludeRare] = useState(false);
   const [help, setHelp] = useState(false);
   const [alert, setAlert] = useState<Alert | null>(null);
   const [history, setHistory] = useState<Criterion[]>([]);
@@ -108,6 +121,8 @@ export function App() {
         if (cancelled) return;
         const initial = decodeState(data, window.location.hash);
         setState(initial);
+        // A link opens with its word list showing.
+        setSearched((s) => ({ ...s, [initial.task]: initial.query }));
         setActiveRow(initial.task === 'decodable' ? 'taught' : 'all');
         setDs(data);
       })
@@ -141,6 +156,7 @@ export function App() {
       const next = decodeState(ds, window.location.hash);
       lastPage.current = `${next.view}:${next.exploreWord}`;
       setState(next);
+      setSearched((s) => ({ ...s, [next.task]: next.query }));
       setActiveRow(next.task === 'decodable' ? 'taught' : 'all');
     };
     window.addEventListener('popstate', onPop);
@@ -173,8 +189,36 @@ export function App() {
 
   const { query, notation, sort, task } = state;
   const morph = useMemo(() => (ds ? new Morph(ds) : null), [ds]);
-  const stats = useMemo(() => (ds ? computeStats(ds, query.wordSet) : null), [ds, query.wordSet]);
-  const results = useMemo(() => (ds && morph ? sortResults(ds, search(ds, query, morph), sort) : []), [ds, morph, query, sort]);
+  const allStats = useMemo(() => (ds ? computeStats(ds, 'all') : null), [ds]);
+  const stats = useMemo(
+    () => (!ds ? null : query.wordSet === 'all' ? allStats : computeStats(ds, query.wordSet)),
+    [ds, allStats, query.wordSet],
+  );
+
+  // What the grids leave out:
+  //   very rare sound spellings (one or two words in the whole list), unless
+  //   the person asks for them on the Advanced Search page; and
+  //   sound spellings with no word within the limits and word shape now set.
+  const rare = useMemo(() => {
+    const ids = new Set<number>();
+    if (ds && allStats) for (const g of ds.gpcs) if (allStats.words[g.id] <= RARE_MAX_WORDS) ids.add(g.id);
+    return ids;
+  }, [ds, allStats]);
+  const available = useMemo(
+    () => (ds ? wordsPerGpc(ds, { wordSet: query.wordSet, filters: query.filters, shape: query.shape }) : null),
+    [ds, query.wordSet, query.filters, query.shape],
+  );
+  const showRare = task === 'advanced' && includeRare;
+  const hidden = useCallback((id: number) => !available || available[id] === 0 || (!showRare && rare.has(id)), [available, rare, showRare]);
+  // The list: the selection last searched for, within the limits set in Options now.
+  const shownSelection = searched[task];
+  const shownQuery = useMemo<Query>(
+    () => ({ ...shownSelection, wordSet: query.wordSet, filters: query.filters }),
+    [shownSelection, query.wordSet, query.filters],
+  );
+  const results = useMemo(() => (ds && morph ? sortResults(ds, search(ds, shownQuery, morph), sort) : []), [ds, morph, shownQuery, sort]);
+  /** Step 3 has changed since the last "Search for Words". */
+  const pending = selectionOf(query) !== selectionOf(shownSelection);
 
   const setQuery = useCallback((fn: (q: Query) => Query) => setState((s) => ({ ...s, query: fn(s.query) })), []);
   const remember = (c: Criterion) =>
@@ -203,6 +247,7 @@ export function App() {
     if (next !== task) stash.current[task] = query;
     const nextQuery = withQuery ?? (next === task ? query : stash.current[next]);
     setState((s) => ({ ...s, view: 'find', task: next, query: nextQuery }));
+    if (withQuery) setSearched((s) => ({ ...s, [next]: withQuery }));
     setActiveRow(next === 'decodable' ? 'taught' : 'all');
     setOpenRows([]);
   };
@@ -233,8 +278,9 @@ export function App() {
   };
 
   const onSearch = () => {
+    setSearched((s) => ({ ...s, [task]: query }));
     if (!hasCriteria(query)) say('bad', task === 'decodable' ? 'Choose the sound spellings your students know' : 'Select one or more phonemes');
-    else if (results.length === 0) say('bad', 'No results found');
+    else if (search(ds, query, morph).length === 0) say('bad', 'No results found');
     else say('ok', 'Done!');
     if (window.innerWidth < 900) document.querySelector('.wordlist')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
@@ -256,7 +302,10 @@ export function App() {
   };
 
   const clearAll = () => {
-    setQuery((q) => ({ ...q, all: [], any: [], none: [], shape: null }));
+    // "Clear" empties step 3 and the word list together.
+    const cleared: Query = { ...query, all: [], any: [], none: [], shape: null };
+    setQuery(() => cleared);
+    setSearched((s) => ({ ...s, [task]: cleared }));
     setOpenRows([]);
     setActiveRow(task === 'decodable' ? 'taught' : 'all');
   };
@@ -277,13 +326,16 @@ export function App() {
     openPage(page, { ...startQueries()[page], wordSet: query.wordSet, all: criteria, filters });
   };
 
-  const anySelected = query.all.length + query.any.length + query.none.length > 0 || query.shape !== null;
+  const selected = (q: Query) => q.all.length + q.any.length + q.none.length > 0 || q.shape !== null;
+  const anySelected = selected(query) || selected(shownSelection);
   const emptyHint =
-    task === 'decodable'
-      ? 'Choose the sound spellings your students know to list the words they can read.'
-      : task === 'sound'
-        ? 'Choose a phoneme, then a grapheme, to make a word list.'
-        : 'Choose a grapheme, then a phoneme, to make a word list.';
+    pending && hasCriteria(query)
+      ? 'Click \u201cSearch for Words\u201d to make the word list.'
+      : task === 'decodable'
+        ? 'Choose the sound spellings your students know, then click \u201cSearch for Words.\u201d'
+        : task === 'sound'
+          ? 'Choose a phoneme, then a grapheme. Then click \u201cSearch for Words.\u201d'
+          : 'Choose a grapheme, then a phoneme. Then click \u201cSearch for Words.\u201d';
 
   return (
     <div className="container">
@@ -331,6 +383,7 @@ export function App() {
               onPickAffix={task === 'find' || advanced ? pickAffix : undefined}
               onHelp={() => setHelp(true)}
               shortList={task === 'decodable' ? LETTERS : undefined}
+              hidden={hidden}
             />
 
             <div className="selection-wrap">
@@ -378,6 +431,13 @@ export function App() {
                 </div>
               )}
 
+              {advanced && (
+                <label className="check rare-check" title={`Sound spellings found in only one or two words, such as gh = /p/. There are ${rare.size}.`}>
+                  <input type="checkbox" checked={includeRare} onChange={(e) => setIncludeRare(e.target.checked)} />
+                  Include very rare sound spellings
+                </label>
+              )}
+
               {history.length > 0 && (
                 <div className="history" aria-label="History">
                   <div className="history-title">History</div>
@@ -410,7 +470,8 @@ export function App() {
               ds={ds}
               stats={stats}
               morph={morph}
-              query={query}
+              query={shownQuery}
+              pending={pending}
               notation={notation}
               sort={sort}
               results={results}
@@ -459,7 +520,7 @@ export function App() {
       </footer>
 
       {help && <Help onClose={() => setHelp(false)} />}
-      {print && <PrintSheet ds={ds} mode={print.mode} indexes={print.indexes} title={describeQuery(ds, query, notation)} />}
+      {print && <PrintSheet ds={ds} mode={print.mode} indexes={print.indexes} title={describeQuery(ds, shownQuery, notation)} />}
     </div>
   );
 }

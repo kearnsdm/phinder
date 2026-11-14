@@ -110,8 +110,8 @@ export function Explore({ ds, stats, morph, query, notation, word, onWord, onBac
 
   const tags = (g: Gpc): string[] => {
     const t: string[] = [];
-    if (g.phoneme.silent) t.push('silent');
-    else if (g.phoneme.schwa) t.push('schwa');
+    if (g.phoneme.silent) return t; // the tile already says "silent"
+    if (g.phoneme.schwa) t.push('schwa');
     else if (g.phoneme.struct === 'V' || g.phoneme.struct === 'VC' || g.phoneme.struct === 'CV') t.push('vowel');
     if (g.splitVowel !== null) t.push('split');
     return t;

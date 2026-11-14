@@ -1,7 +1,7 @@
 // A "unit" is one sound spelling, or several that must sit next to each
 // other in a word (for example the rime a-e + k, shown as "ake").
 
-import { phonemeText, type Gpc } from './dataset';
+import { phonemeText, SILENT, type Gpc } from './dataset';
 import type { Notation } from './phonemeMeta';
 
 export type UnitShape = 'single' | 'rime' | 'body' | 'sequence';
@@ -26,10 +26,10 @@ export function unitSpelling(gpcs: Gpc[]): string {
   return out || '(no letter)';
 }
 
-/** The sounds of a unit, for example "/āk/"; "/ /" when no part has a sound. */
+/** The sounds of a unit, for example "/āk/"; "silent" when no part has a sound. */
 export function unitSound(gpcs: Gpc[], notation: Notation): string {
   const sounded = gpcs.filter((g) => !g.phoneme.silent);
-  if (sounded.length === 0) return '/ /';
+  if (sounded.length === 0) return SILENT;
   return `/${sounded.map((g) => phonemeText(g.phoneme, notation)).join('')}/`;
 }
 
