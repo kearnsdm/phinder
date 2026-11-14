@@ -39,6 +39,9 @@ interface Props {
   hidden: (gpcId: number) => boolean;
 }
 
+/** Long labels get smaller type so that they stay inside the cell: "/yoo/" is "mid", "silent" is "long". */
+const fit = (label: string) => (label.length > 5 ? ' long' : label.length === 5 ? ' mid' : '');
+
 const percent = (part: number, whole: number) => (whole > 0 ? `${Math.round((100 * part) / whole)}%` : '');
 
 export function Picker(props: Props) {
@@ -211,7 +214,7 @@ export function Picker(props: Props) {
                       type="button"
                       role="option"
                       aria-selected={phoneme === p.index}
-                      className={`${phoneme === p.index ? 'cell picked' : 'cell'} sound${phonemeLabel(p, notation).length > 5 ? ' long' : ''}`}
+                      className={`${phoneme === p.index ? 'cell picked' : 'cell'} sound${fit(phonemeLabel(p, notation))}`}
                       title={`${spellingsOf(p.index).filter((id) => !hidden(id)).length} spellings`}
                       onClick={() => setPhoneme(p.index)}
                     >
@@ -254,7 +257,7 @@ export function Picker(props: Props) {
                 <button
                   key={g.id}
                   type="button"
-                  className={`cell${mode === 'spelling' ? ' sound' : ''}${label.length > 5 ? ' long' : ''}`}
+                  className={`cell${mode === 'spelling' ? ' sound' : ''}${fit(label)}`}
                   title={cellTitle(g)}
                   onClick={() => onPickGpc(g.id)}
                 >

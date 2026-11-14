@@ -138,6 +138,7 @@ button:disabled { cursor: default; }
 .cell.picked { background: var(--hover); box-shadow: inset 0 -3px 0 var(--green); }
 .cell.blank { cursor: default; }
 .cell.long { font-size: 11px; letter-spacing: -0.3px; }
+.cell.mid { font-size: 14px; letter-spacing: -0.4px; }
 .cell.part { font-size: 13px; }
 
 .search-box { position: relative; margin-top: 20px; width: 163px; }
