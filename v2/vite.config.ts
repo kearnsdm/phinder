@@ -2,7 +2,7 @@ import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 
 // base './' makes the built site work at any address
-// (for example devinkearns.com/phinder-is-phabulous/).
+// (for example devinkearns.com/phinder2/).
 export default defineConfig({
   base: './',
   plugins: [react()],

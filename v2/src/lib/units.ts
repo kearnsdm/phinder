@@ -26,7 +26,7 @@ export function unitSpelling(gpcs: Gpc[]): string {
   return out || '(no letter)';
 }
 
-/** The sounds of a unit, for example "/āk/"; "silent" when no part has a sound. */
+/** The sounds of a unit, for example "/āk/"; "/-/" when no part has a sound. */
 export function unitSound(gpcs: Gpc[], notation: Notation): string {
   const sounded = gpcs.filter((g) => !g.phoneme.silent);
   if (sounded.length === 0) return SILENT;

@@ -9,7 +9,7 @@ version (in the repository root) and adds new ways to search.
 | --- | --- |
 | Search | Matching is exact on whole sound spellings. The first version missed words when the same letters first appeared inside a longer grapheme (for example `e = /ĕ/` in "aesthetic"). |
 | Grids | The grids scroll when there are more than fit. They leave out two groups of sound spellings: those with no word within the limits and word shape now set, and the very rare ones (one or two words in the whole list; `RARE_MAX_WORDS` in `src/lib/stats.ts`). "Include very rare sound spellings" on the Advanced Search page brings the rare ones back. |
-| Silent letters | A letter with no sound is written "silent" (the first version wrote "/ /"). |
+| Silent letters | A letter with no sound is written "/-/" (the first version wrote "/ /"). A note under the word list, and in the spreadsheet file, explains the mark whenever a listed word has a silent letter. |
 | Pages | The top line names the pages: "Spelling to Sound," "Sound to Spelling," "Decodable Words," "Advanced Search," and "Word Explorer." Each keeps its own search. The left column of every page starts with step 1, as in the first version. |
 | Spelling to Sound | The first version's screen: graphemes, phonemes, the selection (AND), the word list. "Prefix" and "Suffix" menus under the grids add a word part to the selection. Word parts are found by rule (see `src/lib/morph.ts`), so results need checking. |
 | Sound to Spelling | The same steps the other way round: pick a phoneme first, then one of its spellings. |
@@ -77,7 +77,7 @@ npm run build
 
 `npm run build` writes the finished site to `dist/`. Upload the contents of
 `dist/` to any folder on a web host (for example
-`devinkearns.com/phinder-is-phabulous/`). The site uses relative addresses, so
+`devinkearns.com/phinder2/`). The site uses relative addresses, so
 it works at any path. There is no server code.
 
 To test on a computer without a web server, run:

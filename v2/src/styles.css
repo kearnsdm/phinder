@@ -288,6 +288,7 @@ button:disabled { cursor: default; }
 
 .list-foot { display: flex; align-items: center; gap: 18px; padding-top: 20px; }
 .count { white-space: nowrap; }
+.list-note { margin: 8px 0 0; font-family: var(--ink-font); font-size: 12.5px; color: var(--ink); }
 .exports { display: flex; gap: 14px; flex: 1; flex-wrap: wrap; }
 .list-foot .filter { margin-left: auto; padding-right: 6px; }
 

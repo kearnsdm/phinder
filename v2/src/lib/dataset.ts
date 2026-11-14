@@ -236,10 +236,24 @@ export const seqOf = (ds: Dataset, ids: number[]): string => ids.map((id) => ds.
 
 export const phonemeText = (p: Phoneme, notation: Notation): string => (notation === 'ipa' ? p.ipa : p.sc) || p.code;
 
-/** The first version of Phinder wrote a silent letter as "/ /". */
-export const SILENT = 'silent';
+/**
+ * How a letter with no sound is written. The first version wrote "/ /";
+ * Devin chose "/-/" with a note under the word list (Nov 14, 2026).
+ */
+export const SILENT = '/-/';
+export const SILENT_NOTE = '/-/ means the letter has no sound.';
 
-/** "/ā/", or "silent" for a letter with no sound. */
+/** A test for "this word has a letter with no sound", used to decide when the note is needed. */
+export function silentLetterTest(ds: Dataset): (i: number) => boolean {
+  const silent = new Set(ds.gpcs.filter((g) => g.phoneme.silent).map((g) => g.ch));
+  return (i) => {
+    const seq = ds.seq[i];
+    for (let k = 0; k < seq.length; k++) if (silent.has(seq[k])) return true;
+    return false;
+  };
+}
+
+/** "/ā/", or "/-/" for a letter with no sound. */
 export const phonemeLabel = (p: Phoneme, notation: Notation): string => (p.silent ? SILENT : `/${phonemeText(p, notation)}/`);
 
 /** Grapheme "#" in the data marks a sound that has no letter of its own. */

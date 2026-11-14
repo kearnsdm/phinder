@@ -39,7 +39,7 @@ interface Props {
   hidden: (gpcId: number) => boolean;
 }
 
-/** Long labels get smaller type so that they stay inside the cell: "/yoo/" is "mid", "silent" is "long". */
+/** Long labels get smaller type so that they stay inside the cell: "/yoo/" is "mid", "(no letter)" is "long". */
 const fit = (label: string) => (label.length > 5 ? ' long' : label.length === 5 ? ' mid' : '');
 
 const percent = (part: number, whole: number) => (whole > 0 ? `${Math.round((100 * part) / whole)}%` : '');
@@ -71,7 +71,7 @@ export function Picker(props: Props) {
   }, [search, showAll, allGraphemes, shortList]);
 
   // The data has more than one code for a letter with no sound. The phoneme
-  // grid shows one "silent" cell for all of them.
+  // grid shows one "/-/" cell for all of them.
   const silent = useMemo(() => {
     const codes = ds.phonemes.filter((p) => p.silent && stats.byPhoneme[p.index].gpcs.length > 0);
     return {
@@ -92,7 +92,7 @@ export function Picker(props: Props) {
           p.group === group &&
           (!p.silent || p.index === silent.cell) &&
           spellingsOf(p.index).some((id) => !hidden(id)) &&
-          (!text || phonemeLabel(p, notation).toLowerCase().includes(text)),
+          (!text || phonemeLabel(p, notation).toLowerCase().includes(text) || (p.silent && 'silent'.includes(text))),
       ),
     })).filter((g) => g.items.length > 0);
   }, [ds, silent, spellingsOf, search, notation, hidden]);
@@ -142,10 +142,12 @@ export function Picker(props: Props) {
     );
   };
 
+  /** In a tooltip, "/-/" is spelled out. */
+  const soundName = (g: Gpc) => (g.phoneme.silent ? 'silent' : phonemeLabel(g.phoneme, notation));
   const cellTitle = (g: Gpc) =>
     mode === 'spelling'
-      ? `${graphemeLabel(g.grapheme)} is ${phonemeLabel(g.phoneme, notation)} in ${percent(stats.occ[g.id], step2Total)} of its uses (${stats.words[g.id].toLocaleString()} words)`
-      : `${phonemeLabel(g.phoneme, notation)} is spelled ${graphemeLabel(g.grapheme)} in ${percent(stats.occ[g.id], step2Total)} of its uses (${stats.words[g.id].toLocaleString()} words)`;
+      ? `${graphemeLabel(g.grapheme)} is ${soundName(g)} in ${percent(stats.occ[g.id], step2Total)} of its uses (${stats.words[g.id].toLocaleString()} words)`
+      : `${g.phoneme.silent ? 'A silent letter' : phonemeLabel(g.phoneme, notation)} is spelled ${graphemeLabel(g.grapheme)} in ${percent(stats.occ[g.id], step2Total)} of its uses (${stats.words[g.id].toLocaleString()} words)`;
 
   /** Empty cells that complete the last row of 4 and fill the grid up to `min` cells. */
   const blanks = (used: number, min = 0) =>
@@ -215,7 +217,7 @@ export function Picker(props: Props) {
                       role="option"
                       aria-selected={phoneme === p.index}
                       className={`${phoneme === p.index ? 'cell picked' : 'cell'} sound${fit(phonemeLabel(p, notation))}`}
-                      title={`${spellingsOf(p.index).filter((id) => !hidden(id)).length} spellings`}
+                      title={`${p.silent ? 'Silent letters: ' : ''}${spellingsOf(p.index).filter((id) => !hidden(id)).length} spellings`}
                       onClick={() => setPhoneme(p.index)}
                     >
                       {phonemeLabel(p, notation)}

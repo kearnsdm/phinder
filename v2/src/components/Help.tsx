@@ -85,7 +85,7 @@ export function Help({ onClose }: { onClose: () => void }) {
             <b>Frequency.</b> The number beside a word is its frequency per million words (Fitt, 2000).
           </li>
           <li>
-            <b>Sound Code or IPA.</b> Changes how sounds are written. A letter with no sound is marked &ldquo;silent.&rdquo;
+            <b>Sound Code or IPA.</b> Changes how sounds are written. A letter with no sound is written /-/; a note under the list says so when a listed word has one.
           </li>
           <li>
             <b>What the grids show.</b> A grid shows only the sound spellings that have at least one word within the limits you set in Options.

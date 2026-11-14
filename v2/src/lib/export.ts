@@ -1,6 +1,6 @@
 // Turns a word list into text for copying or downloading.
 
-import { formatFrequency, gpcLabel, gpcsOf, type Dataset } from './dataset';
+import { formatFrequency, gpcLabel, gpcsOf, SILENT_NOTE, silentLetterTest, type Dataset } from './dataset';
 import type { Notation } from './phonemeMeta';
 
 /** "c = /k/  a = /ă/  t = /t/" */
@@ -19,7 +19,8 @@ export const CREDIT = 'Made with Phinder, devinkearns.com';
 
 /**
  * A spreadsheet file. It starts with a byte-order mark so Excel reads the
- * sound symbols correctly, and ends with a blank row and the credit line.
+ * sound symbols correctly, and ends with a blank row, the note on "/-/"
+ * (when a word in the file has a silent letter) and the credit line.
  */
 export function resultsToCsv(ds: Dataset, indexes: number[], notation: Notation): string {
   const rows = [['word', 'sound spellings', 'syllables', 'letters', 'frequency per million']];
@@ -32,7 +33,9 @@ export function resultsToCsv(ds: Dataset, indexes: number[], notation: Notation)
       Number.isNaN(ds.freq[i]) ? '' : String(ds.freq[i]),
     ]);
   }
-  rows.push([], [CREDIT]);
+  rows.push([]);
+  if (indexes.some(silentLetterTest(ds))) rows.push([SILENT_NOTE]);
+  rows.push([CREDIT]);
   return '\uFEFF' + rows.map((r) => r.map(csvCell).join(',')).join('\r\n') + '\r\n';
 }
 

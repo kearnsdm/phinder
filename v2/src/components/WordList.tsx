@@ -2,7 +2,7 @@
 // "Filter Words", and export (copy, spreadsheet file, print).
 
 import { Fragment, useEffect, useMemo, useState } from 'react';
-import { formatFrequency, gpcLabel, gpcsOf, type Dataset } from '../lib/dataset';
+import { formatFrequency, gpcLabel, gpcsOf, SILENT_NOTE, silentLetterTest, type Dataset } from '../lib/dataset';
 import { filterSummary, filtersAreDefault, sameFilters } from '../lib/edit';
 import type { Morph } from '../lib/morph';
 import type { Notation } from '../lib/phonemeMeta';
@@ -50,6 +50,10 @@ export function WordList(props: Props) {
   }, [results, text, ds]);
 
   useEffect(() => setShown(PAGE), [results, text]);
+
+  // The note that explains "/-/" appears only when a listed word has a silent letter.
+  const hasSilentLetter = useMemo(() => silentLetterTest(ds), [ds]);
+  const needsSilentNote = useMemo(() => visible.some(hasSilentLetter), [visible, hasSilentLetter]);
 
   const highlight = useMemo(() => [...query.all, ...query.any], [query.all, query.any]);
   const affixes = useMemo(
@@ -203,6 +207,7 @@ export function WordList(props: Props) {
         </div>
         <input type="text" className="inputform filter" value={text} onChange={(e) => setText(e.target.value)} placeholder="Filter Words" aria-label="Filter words" />
       </div>
+      {needsSilentNote && !optionsOpen && <p className="list-note">{SILENT_NOTE}</p>}
     </section>
   );
 }

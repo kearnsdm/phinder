@@ -50,7 +50,7 @@ describe('data loading', () => {
   it('applies the display corrections and labels silent letters', () => {
     expect(gpcLabel(ds.gpcByKey.get('or_Or')!, 'sc')).toBe('or = /or/');
     expect(gpcLabel(ds.gpcByKey.get("n'_@n")!, 'sc')).toBe("n' = /ən/");
-    expect(gpcLabel(ds.gpcByKey.get('g_#')!, 'sc')).toBe('g = silent');
+    expect(gpcLabel(ds.gpcByKey.get('g_#')!, 'sc')).toBe('g = /-/');
     expect(gpcLabel(ds.gpcByKey.get('th_T')!, 'ipa')).toBe('th = /θ/');
   });
 
@@ -351,9 +351,11 @@ describe('export', () => {
     const csv = resultsToCsv(ds, idx, 'sc');
     expect(csv.split('\r\n')[0]).toBe('\uFEFFword,sound spellings,syllables,letters,frequency per million');
     expect(csv.split('\r\n')[1]).toBe('cat,c = /k/  a = /ă/  t = /t/,1,3,95.5');
-    expect(csv.split('\r\n')[2]).toBe('a-bomb,a = /ā/  b = /b/  o = /ŏ/  m = /m/  b = silent,2,5,');
-    // The file ends with a blank row and the credit line.
-    expect(csv.split('\r\n').slice(3)).toEqual(['', '"Made with Phinder, devinkearns.com"', '']);
+    expect(csv.split('\r\n')[2]).toBe('a-bomb,a = /ā/  b = /b/  o = /ŏ/  m = /m/  b = /-/,2,5,');
+    // The file ends with a blank row, the note on "/-/" (a-bomb has a silent b) and the credit line.
+    expect(csv.split('\r\n').slice(3)).toEqual(['', '/-/ means the letter has no sound.', '"Made with Phinder, devinkearns.com"', '']);
+    // No note when no word has a silent letter.
+    expect(resultsToCsv(ds, [idx[0]], 'sc').split('\r\n').slice(2)).toEqual(['', '"Made with Phinder, devinkearns.com"', '']);
     expect(resultsToText(ds, idx)).toBe('cat\na-bomb');
   });
 });
