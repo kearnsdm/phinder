@@ -18,7 +18,7 @@ export function Help({ onClose }: { onClose: () => void }) {
         <h2>How to use Phinder</h2>
         <p>The top line names the pages. Each page keeps its own list while you look at the others.</p>
 
-        <h3>Find Words</h3>
+        <h3>Spelling to Sound</h3>
         <ol>
           <li>
             <b>Graphemes.</b> Click a letter pattern. Type in &ldquo;Search Letter Pattern&rdquo; to find others, or click &ldquo;&hellip;&rdquo; to see all of them.
@@ -41,13 +41,13 @@ export function Help({ onClose }: { onClose: () => void }) {
         <h3>Sound to Spelling</h3>
         <p>The same steps the other way round: click a sound, then one of its spellings.</p>
 
-        <h3>Decodable List</h3>
+        <h3>Decodable Words</h3>
         <p>
           Choose the sound spellings your students know: click a letter, then its sound. The list shows only words in which every sound spelling is known. For example, with a, i, m,
           n, p, s and t the list has &ldquo;map,&rdquo; &ldquo;pin&rdquo; and &ldquo;spit,&rdquo; and not &ldquo;ship.&rdquo;
         </p>
 
-        <h3>Advanced</h3>
+        <h3>Advanced Search</h3>
         <ul>
           <li>
             <b>Or, and not.</b> Under your selection, &ldquo;+ or one of these&rdquo; adds a row of alternatives, and &ldquo;+ but none of these&rdquo; adds a row of sound spellings to

@@ -9,21 +9,21 @@ version (in the repository root) and adds new ways to search.
 | --- | --- |
 | Search | Matching is exact on whole sound spellings. The first version missed words when the same letters first appeared inside a longer grapheme (for example `e = /ĕ/` in "aesthetic"). |
 | Grids | Every grapheme and every phoneme can be reached. The grids scroll when there are more than fit. |
-| Pages | The top line names the pages: "Find Words," "Sound to Spelling," "Decodable List," "Advanced," and "Explore a Word." Each keeps its own search. The left column of every page starts with step 1, as in the first version. |
-| Find Words | The first version's screen: graphemes, phonemes, the selection (AND), the word list. "Prefix" and "Suffix" menus under the grids add a word part to the selection. Word parts are found by rule (see `src/lib/morph.ts`), so results need checking. |
+| Pages | The top line names the pages: "Spelling to Sound," "Sound to Spelling," "Decodable Words," "Advanced Search," and "Word Explorer." Each keeps its own search. The left column of every page starts with step 1, as in the first version. |
+| Spelling to Sound | The first version's screen: graphemes, phonemes, the selection (AND), the word list. "Prefix" and "Suffix" menus under the grids add a word part to the selection. Word parts are found by rule (see `src/lib/morph.ts`), so results need checking. |
 | Sound to Spelling | The same steps the other way round: pick a phoneme first, then one of its spellings. |
-| Advanced | Every other way to select words: OR and NOT rows, join (+), place in the word, word shape, word parts, and a swap button that makes the two grids trade places. |
-| Join (+) | On the Advanced page. Joined sound spellings form one unit. A split digraph is written around the next grapheme (`a-e` + `k` = `ake`). Units are labelled "rime" or "body" when they have that shape. |
-| Word shape | On the Advanced page. CVC, CCVC, CVCC, CCVCC, CVCe, CCVCe, VCe, CV, VC. C is one consonant sound spelling, V is one vowel sound spelling, and e is the final e of a vowel-consonant-e pattern, whatever the vowel sound (make, have, some, ache). See `wordShape` in `src/lib/dataset.ts`. |
-| Position | On the Advanced page. Click a selected sound spelling to require it at the start, in the middle, or at the end of the word. |
-| Or, and not | On the Advanced page. Under the selection, "+ or one of these" and "+ but none of these" add an OR row and a NOT row. |
-| Decodable list | The tab holds the sound spellings students know. The list shows only words made entirely from them. "+ words must also have" adds sound spellings that every word must contain. |
+| Advanced Search | Every other way to select words: OR and NOT rows, join (+), place in the word, word shape, word parts, and a swap button that makes the two grids trade places. |
+| Join (+) | On the Advanced Search page. Joined sound spellings form one unit. A split digraph is written around the next grapheme (`a-e` + `k` = `ake`). Units are labelled "rime" or "body" when they have that shape. |
+| Word shape | On the Advanced Search page. CVC, CCVC, CVCC, CCVCC, CVCe, CCVCe, VCe, CV, VC. C is one consonant sound spelling, V is one vowel sound spelling, and e is the final e of a vowel-consonant-e pattern, whatever the vowel sound (make, have, some, ache). See `wordShape` in `src/lib/dataset.ts`. |
+| Position | On the Advanced Search page. Click a selected sound spelling to require it at the start, in the middle, or at the end of the word. |
+| Or, and not | On the Advanced Search page. Under the selection, "+ or one of these" and "+ but none of these" add an OR row and a NOT row. |
+| Decodable Words | The page holds the sound spellings students know. The list shows only words made entirely from them. "+ words must also have" adds sound spellings that every word must contain. |
 | Options | Lists start with no limits (the first version started with 4 syllables and 10 letters). Syllables and letters each have one row of numbered buttons: click the smallest number, then the largest. Frequency has a slider with two handles; its stops follow a 1-2-5 series, so low frequencies get most of the track. Limits apply at once, and a line above the list states any limit in force. A word-set switch keeps only words that have a frequency value. |
 | Frequency | Frequencies are per million words, from Fitt (2000), which is also the source of the word list. |
 | Word list | The count follows "Filter Words". Small frequencies are shown (0.31, not blank). The sort choice is kept. |
 | Export | Copy the words, download a spreadsheet file (CSV), print a list, print word cards. |
 | Share | "Copy link" copies an address that reopens the same search. |
-| Explore a Word | One word, taken apart: a tile per sound spelling with its consistency, body and rime for one-syllable words, and word parts. |
+| Word Explorer | One word, taken apart: a tile per sound spelling with its consistency, body and rime for one-syllable words, and word parts. |
 
 ## Data
 

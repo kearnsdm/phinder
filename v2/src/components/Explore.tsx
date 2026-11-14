@@ -1,4 +1,4 @@
-// "Explore a Word": one word, taken apart.
+// "Word Explorer": one word, taken apart.
 //   Sound spellings: a tile for each, shaded by how consistent the mapping is.
 //   Body and rime:   for one-syllable words.
 //   Word parts:      prefixes and suffixes found by rule.
@@ -134,12 +134,12 @@ export function Explore({ ds, stats, morph, query, notation, word, onWord, onBac
   };
 
   return (
-    <section className="explore" aria-label="Explore a word">
+    <section className="explore" aria-label="Word Explorer">
       <h2 className="heading">
         <button type="button" className="link back" onClick={onBack}>
           &#8249; Word List
         </button>
-        Explore a Word
+        Word Explorer
       </h2>
 
       <form
@@ -277,7 +277,7 @@ export function Explore({ ds, stats, morph, query, notation, word, onWord, onBac
               <p className="explore-note decod">
                 <b>Decodability. </b>
                 {known === null
-                  ? 'To check this word against the sound spellings your students know, fill the list under \u201CDecodable List\u201D in the top line.'
+                  ? 'To check this word against the sound spellings your students know, fill the list under \u201CDecodable Words\u201D in the top line.'
                   : unknown.length === 0
                     ? `Every sound spelling in this word is on your list (${gpcs.length} of ${gpcs.length}).`
                     : `${gpcs.length - unknown.length} of ${gpcs.length} sound spellings are on your list. Not on your list: ${[...new Set(unknown.map((g) => gpcLabel(g, notation)))].join(', ')}.`}

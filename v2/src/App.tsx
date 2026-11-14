@@ -34,7 +34,9 @@ const LOGO = inlineAssets().logo ?? `${import.meta.env.BASE_URL}logo.png`;
 const SITE = 'https://www.devinkearns.com/';
 
 /**
- * The pages of the word-list screen, in the order of the top line.
+ * The pages of the word-list screen, in the order of the top line. The
+ * titles follow one pattern: the two directions first (Spelling to Sound,
+ * Sound to Spelling), then three noun phrases.
  *   find:      the first Phinder's screen (spelling to sound), plus word parts
  *   sound:     the same steps the other way round (sound to spelling)
  *   decodable: words made only from the sound spellings students know
@@ -42,10 +44,10 @@ const SITE = 'https://www.devinkearns.com/';
  * Each page keeps a search of its own.
  */
 const PAGES: [Task, string][] = [
-  ['find', 'Find Words'],
+  ['find', 'Spelling to Sound'],
   ['sound', 'Sound to Spelling'],
-  ['decodable', 'Decodable List'],
-  ['advanced', 'Advanced'],
+  ['decodable', 'Decodable Words'],
+  ['advanced', 'Advanced Search'],
 ];
 
 const startQueries = (): Record<Task, Query> => ({
@@ -195,7 +197,7 @@ export function App() {
   }
 
   // ---- pages ----
-  /** Shows a page. `withQuery` replaces that page's search (used by Explore a Word). */
+  /** Shows a page. `withQuery` replaces that page's search (used by the Word Explorer). */
   const openPage = (next: Task, withQuery?: Query) => {
     if (!withQuery && next === task && state.view === 'find') return;
     if (next !== task) stash.current[task] = query;
@@ -204,7 +206,7 @@ export function App() {
     setActiveRow(next === 'decodable' ? 'taught' : 'all');
     setOpenRows([]);
   };
-  /** The search of the "Decodable List" page, wherever the person is now. */
+  /** The search of the "Decodable Words" page, wherever the person is now. */
   const decodableQuery = task === 'decodable' ? query : stash.current.decodable;
   const advanced = task === 'advanced';
 
@@ -267,7 +269,7 @@ export function App() {
 
   const explore = (word: string) => setState((s) => ({ ...s, view: 'explore', exploreWord: word }));
   const showList = () => setState((s) => ({ ...s, view: 'find' }));
-  /** From Explore a Word. A joined unit (a body or a rime) needs the Advanced page. */
+  /** From the Word Explorer. A joined unit (a body or a rime) needs the Advanced Search page. */
   const findFromExplore = (criteria: Criterion[], oneSyllable?: boolean) => {
     const needsAdvanced = criteria.some((c) => c.type === 'unit' && (c.gpcs.length > 1 || c.position !== 'any'));
     const page: Task = needsAdvanced ? 'advanced' : 'find';
@@ -308,7 +310,7 @@ export function App() {
             aria-current={state.view === 'explore' ? 'page' : undefined}
             onClick={() => setState((s) => ({ ...s, view: 'explore' }))}
           >
-            Explore a Word
+            Word Explorer
           </button>
         </nav>
       </header>
